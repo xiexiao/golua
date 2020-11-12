@@ -6,13 +6,7 @@ package lua
 //#include <stdlib.h>
 //#include "golua.h"
 import "C"
-import (
-	"fmt"
-	"reflect"
-	"strconv"
-	"strings"
-	"unsafe"
-)
+import "unsafe"
 
 type LuaError struct {
 	code       int

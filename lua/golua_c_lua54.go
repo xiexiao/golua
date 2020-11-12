@@ -126,7 +126,13 @@ void clua_seri_free(void* ud);
 */
 import "C"
 
-import "unsafe"
+import (
+	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+	"unsafe"
+)
 
 func luaToInteger(s *C.lua_State, n C.int) C.longlong {
 	return C.lua_tointegerx(s, n, nil)
