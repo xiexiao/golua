@@ -236,6 +236,12 @@ func (L *State) MustCall(nargs, nresults int) {
 	L.callEx(nargs, nresults, false)
 }
 
+// clua_upvalueindex
+func (L *State) UpvalueIndex(n int) int {
+	// we got 1 from go function
+	return int(C.clua_upvalueindex(C.int(n)) - 1)
+}
+
 // lua_checkstack
 func (L *State) CheckStack(extra int) bool {
 	return C.lua_checkstack(L.s, C.int(extra)) != 0
@@ -353,6 +359,11 @@ func (L *State) NewThread() *State {
 // lua_next
 func (L *State) Next(index int) int {
 	return int(C.lua_next(L.s, C.int(index)))
+}
+
+// lua_len
+func (L *State) Len(index int) {
+	C.lua_len(L.s, C.int(index))
 }
 
 // lua_objlen

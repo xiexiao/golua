@@ -6,7 +6,13 @@ package lua
 //#include <stdlib.h>
 //#include "golua.h"
 import "C"
-import "unsafe"
+import (
+	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+	"unsafe"
+)
 
 type LuaError struct {
 	code       int
@@ -89,6 +95,14 @@ func (L *State) CheckUdata(narg int, tname string) unsafe.Pointer {
 	Ctname := C.CString(tname)
 	defer C.free(unsafe.Pointer(Ctname))
 	return unsafe.Pointer(C.luaL_checkudata(L.s, C.int(narg), Ctname))
+}
+
+// UdataToBytes UdataToBytes
+func (L *State) UdataToBytes(narg int, nsize int) []byte {
+	ud := L.ToUserdata(narg)
+	sz := L.ToInteger(nsize)
+	buf := C.GoBytes(ud, C.int(sz))
+	return buf
 }
 
 // Executes file, returns nil for no errors or the lua error string on failure
@@ -234,4 +248,221 @@ func (L *State) Unref(t int, ref int) {
 // luaL_where
 func (L *State) Where(lvl int) {
 	C.luaL_where(L.s, C.int(lvl))
+}
+
+// clua_seri_unpack
+func (L *State) LSeriUnpack(nargs, nsz int) int {
+	return int(C.clua_seri_unpack(L.s,
+		C.int(nargs), C.int(nsz)))
+}
+
+// clua_seri_pack
+func (L *State) LSeriPack() int {
+	return int(C.clua_seri_pack(L.s))
+}
+
+// LSeriFree LSeriFree
+// clua_seri_free
+func LSeriFree(ud unsafe.Pointer) {
+	C.clua_seri_free(ud)
+}
+
+// SetGoFuncs SetGoFuncs
+func (L *State) SetGoFuncs(n int,
+	funcs map[string]LuaGoFunction) {
+	for k, v := range funcs {
+		L.PushGoFunction(v)
+		L.SetField(n, k)
+	}
+}
+
+// SetGoGC SetGoGC
+func (L *State) SetGoGC(n int, name string) int {
+	err := L.DoString(fmt.Sprintf(`
+	function g__gc(t) 
+		if t.%s and type(t.%s) == 'userdata' then
+			t.%s(t)
+		end 
+	end
+	`, name, name, name))
+	if err != nil {
+		L.RaiseError(err.Error())
+	}
+	L.GetGlobal("g__gc")
+	L.SetField(n, "__gc")
+	err = L.DoString(`g__gc = nil`)
+	if err != nil {
+		L.RaiseError(err.Error())
+	}
+	return 0
+}
+
+// SetMetaFunc SetMetaFunc
+// (1, 'call'), will set the meta funct __call
+func (L *State) SetMetaFunc(n int, name string) int {
+	field := "__" + name
+	fname := "g" + field
+	err := L.DoString(fmt.Sprintf(`
+	function %s(t) 
+		if t.%s and type(t.%s) == 'userdata' then
+			t.%s(t)
+		end 
+	end
+	`, fname, name, name, name))
+	if err != nil {
+		L.RaiseError(err.Error())
+	}
+	L.GetGlobal(field)
+	L.SetField(n, field)
+	err = L.DoString(fname + ` = nil`)
+	if err != nil {
+		L.RaiseError(err.Error())
+	}
+	return 0
+}
+
+// LPushError LPushError
+func (L *State) LPushError(err error) int {
+	return L.LPushErrorStr(err.Error())
+}
+
+// LPushErrorStr LPushErrorStr
+func (L *State) LPushErrorStr(s string) int {
+	L.PushBoolean(false)
+	L.PushString(s)
+	return 2
+}
+
+// LPushToTable LPushToTable
+func (L *State) LPushToTable(ptr interface{}) int {
+	fields, _ := getLuaField(ptr)
+	L.NewTable()
+	for name, v := range fields {
+		setV(L, v, name)
+	}
+	return 1
+}
+
+func setV(L *State, v reflect.Value, name string) {
+	switch v.Kind() {
+	case reflect.Ptr:
+		if !v.IsNil() {
+			setV(L, v.Elem(), name)
+		}
+	case reflect.String:
+		L.PushString(v.String())
+		L.SetField(-2, name)
+	case reflect.Int:
+		L.PushInteger(v.Int())
+		L.SetField(-2, name)
+	case reflect.Float64:
+		L.PushNumber(v.Float())
+		L.SetField(-2, name)
+	case reflect.Bool:
+		L.PushBoolean(v.Bool())
+		L.SetField(-2, name)
+	}
+}
+
+// LGetFromTable LGetFromTable
+func (L *State) LGetFromTable(ptr interface{}, n int) {
+	fields, defaluts := getLuaField(ptr)
+	L.fromTable(ptr, n, fields, defaluts)
+}
+
+// LFromTable LFromTable
+func (L *State) fromTable(ptr interface{}, n int,
+	fields map[string]reflect.Value,
+	defaluts map[string]string) {
+	for name, v := range fields {
+		L.GetField(n, name)
+		var val string
+		if !L.IsNoneOrNil(-1) {
+			val = L.ToString(-1)
+		} else {
+			if val2, ok := defaluts[name]; ok {
+				val = val2
+			}
+		}
+		if val != "" {
+			setVal(v, val)
+		}
+	}
+}
+
+// LGetGlobal LGetGlobal
+func (L *State) LGetGlobal(ptr interface{}) {
+	fields, defaluts := getLuaField(ptr)
+	for name, v := range fields {
+		L.GetGlobal(name)
+		var val string
+		if !L.IsNoneOrNil(-1) {
+			val = L.ToString(-1)
+		} else {
+			if val2, ok := defaluts[name]; ok {
+				val = val2
+			}
+		}
+		if val != "" {
+			setVal(v, val)
+		}
+	}
+}
+
+func getFields(v reflect.Value,
+	fields map[string]reflect.Value,
+	defaults map[string]string) {
+	for i := 0; i < v.NumField(); i++ {
+		fieldInfo := v.Type().Field(i)
+		if fieldInfo.Anonymous {
+			getFields(v.Field(i), fields, defaults)
+			continue
+		}
+		tag := fieldInfo.Tag
+		name := tag.Get("lua")
+		if strings.Contains(name, ",") {
+			names := strings.Split(name, ",")
+			if len(names) > 1 {
+				name = names[0]
+				if name == "" {
+					name = strings.ToLower(fieldInfo.Name)
+				}
+				defaults[name] = names[1]
+			}
+		}
+		if name != "" {
+			fields[name] = v.Field(i)
+		}
+	}
+}
+
+func getLuaField(ptr interface{}) (map[string]reflect.Value, map[string]string) {
+	fields := make(map[string]reflect.Value)
+	defaults := make(map[string]string)
+	elem := reflect.ValueOf(ptr).Elem()
+	getFields(elem, fields, defaults)
+	return fields, defaults
+}
+
+func setVal(v reflect.Value, val string) {
+	switch v.Kind() {
+	case reflect.String:
+		v.SetString(val)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		if i, err := strconv.ParseInt(val, 10, 64); err == nil {
+			v.SetInt(i)
+		}
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		if i, err := strconv.ParseUint(val, 10, 64); err == nil {
+			v.SetUint(i)
+		}
+	case reflect.Float32, reflect.Float64:
+		if i, err := strconv.ParseFloat(val, 64); err == nil {
+			v.SetFloat(i)
+		}
+	case reflect.Bool:
+		if b, err := strconv.ParseBool(val); err == nil {
+			v.SetBool(b)
+		}
+	}
 }

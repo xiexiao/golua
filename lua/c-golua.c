@@ -117,6 +117,11 @@ static int callback_c (lua_State* L)
 	return golua_callgofunction(gostateindex,fid);
 }
 
+int clua_upvalueindex(int n) 
+{
+	return lua_upvalueindex(n);
+}
+
 void clua_pushcallback(lua_State* L)
 {
 	lua_pushcclosure(L,callback_c,1);

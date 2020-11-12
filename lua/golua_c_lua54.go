@@ -49,10 +49,10 @@ int load_chunk(lua_State *L, char *b, int size, const char* chunk_name) {
 	chunk ck;
 	ck.buffer = b;
 	ck.size = size;
-	int errno;
-	errno = lua_load(L, reader, &ck, chunk_name, NULL);
-	if (errno != 0) {
-		return luaL_error(L, "unable to load chunk, errno: %d", errno);
+	int err;
+	err = lua_load(L, reader, &ck, chunk_name, NULL);
+	if (err != 0) {
+		return luaL_error(L, "unable to load chunk, errno: %d", err);
 	}
 	return 0;
 }
@@ -111,10 +111,10 @@ int dump_chunk (lua_State *L) {
 	luaL_checktype(L, -1, LUA_TFUNCTION);
 	lua_settop(L, -1);
 	luaL_buffinit(L,&b);
-	int errno;
-	errno = lua_dump(L, writer, &b, 0);
-	if (errno != 0){
-	return luaL_error(L, "unable to dump given function, errno:%d", errno);
+	int err;
+	err = lua_dump(L, writer, &b, 0);
+	if (err != 0){
+	return luaL_error(L, "unable to dump given function, errno:%d", err);
 	}
 	luaL_pushresult(&b);
 	return 0;
@@ -218,12 +218,22 @@ func (L *State) RawGeti(index int, n int) {
 	C.lua_rawgeti(L.s, C.int(index), C.longlong(n))
 }
 
+// lua_geti
+func (L *State) Geti(index int, n int) {
+	C.lua_geti(L.s, C.int(index), C.longlong(n))
+}
+
 // lua_rawseti
 func (L *State) RawSeti(index int, n int) {
 	C.lua_rawseti(L.s, C.int(index), C.longlong(n))
 }
 
+// lua_seti
+func (L *State) Seti(index int, n int) {
+	C.lua_seti(L.s, C.int(index), C.longlong(n))
+}
+
 // lua_gc
 func (L *State) GC(what, data int) int {
-    return int(C.lua_gc_compat(L.s, C.int(what), C.int(data)))
+	return int(C.lua_gc_compat(L.s, C.int(what), C.int(data)))
 }
