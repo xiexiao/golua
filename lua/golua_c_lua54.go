@@ -119,6 +119,10 @@ int dump_chunk (lua_State *L) {
 	luaL_pushresult(&b);
 	return 0;
 }
+
+int clua_seri_unpack(lua_State *L, int n, int sz);
+int clua_seri_pack(lua_State *L);
+void clua_seri_free(void* ud);
 */
 import "C"
 

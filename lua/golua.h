@@ -35,7 +35,3 @@ int clua_isgofunction(lua_State *L, int n);
 int clua_isgostruct(lua_State *L, int n);
 int clua_upvalueindex(int n);
 
-int clua_seri_unpack(lua_State *L, int n, int sz);
-int clua_seri_pack(lua_State *L);
-void clua_seri_free(void* ud);
-
