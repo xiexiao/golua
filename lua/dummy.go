@@ -14,5 +14,8 @@
 package lua
 
 import (
-	_ "github.com/xiexiao/golua/lua"
+	_ "github.com/xiexiao/golua/lua/lua51"
+	_ "github.com/xiexiao/golua/lua/lua52"
+	_ "github.com/xiexiao/golua/lua/lua53"
+	_ "github.com/xiexiao/golua/lua/lua54"
 )
