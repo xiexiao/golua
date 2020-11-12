@@ -150,6 +150,11 @@ func (L *State) ObjLen(index int) uint {
 	return uint(C.lua_rawlen(L.s, C.int(index)))
 }
 
+// lua_len
+func (L *State) Len(index int) {
+	C.lua_len(L.s, C.int(index))
+}
+
 // lua_tointeger
 func (L *State) ToInteger(index int) int {
 	return int(C.lua_tointegerx(L.s, C.int(index), nil))

@@ -148,6 +148,11 @@ func (L *State) ObjLen(index int) uint {
 	return uint(C.lua_rawlen(L.s, C.int(index)))
 }
 
+// lua_len
+func (L *State) Len(index int) {
+	C.lua_len(L.s, C.int(index))
+}
+
 // lua_tointeger
 func (L *State) ToInteger(index int) int {
 	return int(C.lua_tointegerx(L.s, C.int(index), nil))
@@ -228,5 +233,5 @@ func (L *State) RawSeti(index int, n int) {
 
 // lua_gc
 func (L *State) GC(what, data int) int {
-    return int(C.lua_gc(L.s, C.int(what), C.int(data)))
+	return int(C.lua_gc(L.s, C.int(what), C.int(data)))
 }

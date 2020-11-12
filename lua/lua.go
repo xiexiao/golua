@@ -361,11 +361,6 @@ func (L *State) Next(index int) int {
 	return int(C.lua_next(L.s, C.int(index)))
 }
 
-// lua_len
-func (L *State) Len(index int) {
-	C.lua_len(L.s, C.int(index))
-}
-
 // lua_objlen
 // lua_pop
 func (L *State) Pop(n int) {
