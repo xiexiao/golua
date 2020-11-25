@@ -19,7 +19,7 @@ package lua
 #cgo linux,!lua52,!lua53,!lua54,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -llua5.1
 #cgo linux,lua52,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -llua5.2
 #cgo linux,lua53,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -llua5.3
-#cgo linux,lua54,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -llua5.4 -lm
+#cgo linux,lua54,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -llua5.4 -lm -ldl
 
 #cgo darwin,!lua52,!lua53,!lua54,!llua,!luaa,!luajit,!lluadash5.1 pkg-config: lua5.1
 #cgo darwin,lua52,!llua,!luaa,!luajit,!lluadash5.1 pkg-config: lua5.2
