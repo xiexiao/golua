@@ -31,7 +31,10 @@ package lua
 #cgo freebsd,lua53,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -llua-5.3
 #cgo freebsd,lua54,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -llua-5.4 -lm
 
-#cgo windows,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -L${SRCDIR} -llua -lmingwex -lmingw32
+#cgo windows,!lua52,!lua53,!lua54,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -L${SRCDIR} -llua -lmingwex -lmingw32
+#cgo windows,lua52,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -llua52
+#cgo windows,lua53,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -llua53
+#cgo windows,lua54,!llua,!luaa,!luajit,!lluadash5.1 LDFLAGS: -llua54
 
 #include <lua.h>
 #include <stdlib.h>
@@ -40,9 +43,10 @@ package lua
 
 */
 import "C"
-import "unsafe"
-
-import "fmt"
+import (
+	"fmt"
+	"unsafe"
+)
 
 type LuaStackEntry struct {
 	Name        string
@@ -52,7 +56,7 @@ type LuaStackEntry struct {
 }
 
 func newState(L *C.lua_State) *State {
-	newstate := &State{L, 0, make([]interface{}, 0, 8), make([]uint, 0, 8), nil}
+	newstate := &State{L, 0, make([]interface{}, 0, 8), make([]uint, 0, 8), nil, nil}
 	registerGoState(newstate)
 	C.clua_setgostate(L, C.size_t(newstate.Index))
 	C.clua_initstate(L)
@@ -353,7 +357,7 @@ func (L *State) NewThread() *State {
 	//TODO: should have same lists as parent
 	//		but may complicate gc
 	s := C.lua_newthread(L.s)
-	return &State{s, 0, nil, nil, nil}
+	return &State{s, 0, nil, nil, nil, nil}
 }
 
 // lua_next
@@ -580,9 +584,19 @@ func (L *State) OpenOS() {
 	C.clua_openos(L.s)
 }
 
+// Sets the lua hook (lua_sethook).
+// This and SetExecutionLimit are mutual exclusive
+func (L *State) SetHook(f HookFunction, instrNumber int) {
+	L.hookFn = f
+	C.clua_sethook(L.s, C.int(instrNumber))
+}
+
 // Sets the maximum number of operations to execute at instrNumber, after this the execution ends
+// This and SetHook are mutual exclusive
 func (L *State) SetExecutionLimit(instrNumber int) {
-	C.clua_setexecutionlimit(L.s, C.int(instrNumber))
+	L.SetHook(func(l *State) {
+		l.RaiseError(ExecutionQuantumExceeded)
+	}, instrNumber)
 }
 
 // Returns the current stack trace
@@ -613,7 +627,7 @@ func (L *State) StackTrace() []LuaStackEntry {
 func (L *State) RaiseError(msg string) {
 	st := L.StackTrace()
 	prefix := ""
-	if len(st) >= 1 {
+	if len(st) >= 2 {
 		prefix = fmt.Sprintf("%s:%d: ", st[1].ShortSource, st[1].CurrentLine)
 	}
 	panic(&LuaError{0, prefix + msg, st})
