@@ -245,18 +245,23 @@ func (L *State) Where(lvl int) {
 }
 
 type luaUdata struct {
-    ptr unsafe.Pointer
+	idx uint
 }
 
 func (L *State) NewUdata(it interface{}, tname string) {
-    ud :=(*luaUdata)L.NewUserdata(uintptr(unsafe.Sizeof(luaUdata{})))
-	ud.ptr = unsafe.Pointer(it)
+	ud := (*luaUdata)(L.NewUserdata(uintptr(unsafe.Sizeof(luaUdata{}))))
+	ud.idx = L.register(it)
 	L.LGetMetaTable(tname)
 	L.SetMetaTable(-2)
 }
 
-func (L *State) GetUdata(n int, tname string) unsafe.Pointer {
-    it := (*luaUdata)(L.CheckUdata(n, tname))
-	return it.ptr
+func (L *State) GetUdata(n int, tname string) interface{} {
+	it := (*luaUdata)((L.CheckUdata(n, tname)))
+	fid := it.idx
+	return L.registry[fid]
 }
 
+func (L *State) RemoveUdata(n int, tname string) {
+	it := (*luaUdata)((L.CheckUdata(n, tname)))
+	L.unregister(it.idx)
+}
