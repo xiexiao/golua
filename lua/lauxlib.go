@@ -243,3 +243,20 @@ func (L *State) Unref(t int, ref int) {
 func (L *State) Where(lvl int) {
 	C.luaL_where(L.s, C.int(lvl))
 }
+
+type luaUdata struct {
+    ptr unsafe.Pointer
+}
+
+func (L *State) NewUdata(it interface{}, tname string) {
+    ud :=(*luaUdata)L.NewUserdata(uintptr(unsafe.Sizeof(luaUdata{})))
+	ud.ptr = unsafe.Pointer(it)
+	L.LGetMetaTable(tname)
+	L.SetMetaTable(-2)
+}
+
+func (L *State) GetUdata(n int, tname string) unsafe.Pointer {
+    it := (*luaUdata)(L.CheckUdata(n, tname))
+	return it.ptr
+}
+
