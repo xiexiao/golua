@@ -265,3 +265,9 @@ func (L *State) RemoveUdata(n int, tname string) {
 	it := (*luaUdata)((L.CheckUdata(n, tname)))
 	L.unregister(it.idx)
 }
+
+func (L *State) LErrorCheck(err error) {
+	if err != nil {
+		L.RaiseError(err.Error())
+	}
+}
