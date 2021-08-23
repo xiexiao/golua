@@ -1,0 +1,63 @@
+package {{.PkgName}}
+
+import (
+{{- if .Imports}}
+{{- range .Imports}}
+	"{{.Import}}"
+{{- end }}
+{{ end }}
+	"github.com/xiexiao/golua/lua"
+)
+
+const luaMT_{{.StructName}} = "_{{.PkgName}}.luaMT_{{.StructName}}"
+
+func lua_{{.StructName}}GC(L *lua.State) int {
+	L.RemoveUdata(1, luaMT_{{.StructName}})
+	L.PushBoolean(true)
+	return 1
+}
+
+func Lua{{.StructName}}Init(L *lua.State) int {
+	L.NewMetaTable(luaMT_{{.StructName}})
+
+	L.PushValue(-1)
+	L.SetField(-2, "__index")
+
+	L.SetGoFuncs(-2, lua_{{.StructName}}Funcs)
+	L.SetGoGC(-2, "Close")
+
+	L.Pop(1)
+{{ if .FuncNew}}
+	L.NewTable()
+	L.PushGoFunction(lua{{.StructName}}New)
+	L.SetField(-2, "new")
+{{ end }}
+	L.SetField(-2, "{{.ModuleName}}")
+	return 0
+}
+{{ if .FuncNew }}
+{{ template "func_new" .FuncNew }}
+{{ end }}
+{{- if .Funcs}}
+{{- range .Funcs}}
+{{ template "func" .}}
+{{- end}}
+{{- range .Fields}}
+{{ template "func_field" .}}
+{{- end}}
+{{- end}}
+var lua_{{.StructName}}Funcs = map[string]lua.LuaGoFunction{
+{{- if .Fields}}
+{{- range .Fields }}
+	"_{{.Name}}": lua_{{.StructName}}{{.Name}},
+{{- end }}
+
+{{- end }}
+{{- if .Funcs}}
+{{- range .Funcs }}
+	"{{.Name}}": lua{{.StructName}}{{.FuncName}},
+{{- end }}
+
+{{- end }}
+	"Close": lua_{{.StructName}}GC,
+}

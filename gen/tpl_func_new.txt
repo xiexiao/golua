@@ -1,0 +1,47 @@
+func lua{{.StructName}}New(L *lua.State) int {
+{{- if .Params}}
+{{- range .Params}}
+    {{.Code}}
+{{- end}}
+{{end}}
+{{- $length := len .Results}}
+{{- if gt $length 0 }}
+	{{.ResultList | join}} := {{.StructName}}New({{.ParamList | join}})
+{{ if .ErrCheck}}
+	L.LErrorCheck({{.ErrCheck}})
+{{ end}}
+{{- end}}
+{{- $sname := .StructName }}
+    {{- range $idx, $el := .Results }}
+    {{- if eq $idx 0 }}
+    L.LoadString(`
+local it = ...
+local t1 = getmetatable(it)
+local mt = {
+	__index = function(t, k)
+		if not k or k:sub(1, 1) == "_" then
+			return
+		end
+		if type(it["_" .. k]) == "userdata" then
+			return it["_" .. k](it)
+		end
+	end
+}
+setmetatable(t1, mt)
+return it
+	`)
+	if {{$el.Name}} != nil {
+	    L.NewUdata({{$el.Name}}, luaMT_{{ $sname }})
+        err := L.Call(1, 1)
+	    if err != nil {
+		    L.RaiseError(err.Error())
+	    }
+    } else {
+        L.PushNil()
+    }
+    {{- else }}
+    {{ $el.Code }}
+    {{- end }}
+    {{- end }}
+	return {{.ResultList | len}}
+}

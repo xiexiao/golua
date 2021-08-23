@@ -326,10 +326,10 @@ func (L *State) SetMetaFunc(n int, name string) int {
 
 // LPushError LPushError
 func (L *State) LPushError(err error) int {
-    if err == nil {
-        L.PushNil()
-        return 1
-    }
+	if err == nil {
+		L.PushNil()
+		return 1
+	}
 	return L.LPushErrorStr(err.Error())
 }
 
