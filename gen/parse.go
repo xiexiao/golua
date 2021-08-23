@@ -173,7 +173,16 @@ func ParseFunc(fd *ast.FuncDecl, check bool) ([]string, []string,
 		if id, ok := x.Type.(*ast.Ident); ok {
 			rtype = id.Name
 		} else if se, ok := x.Type.(*ast.StarExpr); ok {
-			rtype = (se.X.(*ast.Ident)).Name
+			if ide, ok := se.X.(*ast.Ident); ok {
+				rtype = ide.Name
+			} else if see, ok := se.X.(*ast.SelectorExpr); ok {
+				i1, ok1 := see.X.(*ast.Ident)
+				if ok1 {
+					rtype = i1.Name + "." + see.Sel.Name
+					//fmt.Printf("%+v, %+v\n",see.X, see.Sel)
+					//fmt.Printf("%T, %T\n",see.X, see.Sel)
+				}
+			}
 		} else if at, ok := x.Type.(*ast.ArrayType); ok {
 			if id2, ok := at.Elt.(*ast.Ident); ok {
 				rtype = "[]" + id2.Name
