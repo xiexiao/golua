@@ -128,7 +128,7 @@ func ParseFunc(fd *ast.FuncDecl, check bool) ([]string, []string,
 	errCheck := ""
 
 	ftype := fd.Type
-	paramNum := len(ftype.Params.List)
+	//paramNum := len(ftype.Params.List)
 	for i, x := range ftype.Params.List {
 		ptype := ""
 		if t, ok := x.Type.(*ast.Ident); ok {
@@ -149,8 +149,7 @@ func ParseFunc(fd *ast.FuncDecl, check bool) ([]string, []string,
 		}
 	}
 
-	resultNum := len(ftype.Results.List)
-
+	//resultNum := len(ftype.Results.List)
 	start := "v0"
 	j := 1
 	for {
@@ -169,7 +168,7 @@ func ParseFunc(fd *ast.FuncDecl, check bool) ([]string, []string,
 	structID := start
 
 	ri := 0
-	for i, x := range ftype.Results.List {
+	for _, x := range ftype.Results.List {
 		rtype := ""
 		if id, ok := x.Type.(*ast.Ident); ok {
 			rtype = id.Name

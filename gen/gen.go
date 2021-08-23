@@ -29,7 +29,7 @@ func GenLua(filename string, in []byte) ([]byte, error) {
 			stype, ok := spec.Type.(*ast.StructType)
 			if ok {
 				structName = name
-				for i, x := range stype.Fields.List {
+				for _, x := range stype.Fields.List {
 					if x.Tag != nil && len(x.Names) > 0 && strings.HasPrefix(x.Tag.Value, "`lua") {
 						ftype := x.Type.(*ast.Ident).Name
 						fname := x.Names[0].Name
