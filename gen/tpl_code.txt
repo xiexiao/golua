@@ -42,6 +42,8 @@ func Lua{{.StructName}}Init(L *lua.State) int {
 {{- range .Funcs}}
 {{ template "func" .}}
 {{- end}}
+{{- end}}
+{{- if .Fields}}
 {{- range .Fields}}
 {{ template "func_field" .}}
 {{- end}}

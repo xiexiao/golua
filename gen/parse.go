@@ -171,6 +171,7 @@ func ParseFunc(fd *ast.FuncDecl, check bool) ([]string, []string,
 	if ftype.Results != nil {
 		for _, x := range ftype.Results.List {
 			rtype := ""
+			//TODO:change to switch
 			if id, ok := x.Type.(*ast.Ident); ok {
 				rtype = id.Name
 			} else if se, ok := x.Type.(*ast.StarExpr); ok {
@@ -185,8 +186,14 @@ func ParseFunc(fd *ast.FuncDecl, check bool) ([]string, []string,
 					}
 				}
 			} else if at, ok := x.Type.(*ast.ArrayType); ok {
+				//fmt.Printf("%T, %+v\n", at.Elt, at.Elt)
 				if id2, ok := at.Elt.(*ast.Ident); ok {
 					rtype = "[]" + id2.Name
+				} else if see, ok := at.Elt.(*ast.SelectorExpr); ok {
+					i1, ok1 := see.X.(*ast.Ident)
+					if ok1 {
+						rtype = i1.Name + "." + see.Sel.Name
+					}
 				}
 			}
 			if rtype != "" {

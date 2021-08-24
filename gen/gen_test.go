@@ -23,6 +23,9 @@ type Code struct {
 func CodeNew(s byte)(*Code, error) {
     return nil, nil
 }
+
+func (c *Code) Check() {
+}
     `
 	buf, err := GenLua(fname, []byte(code))
 	t.Log(buf)
@@ -38,6 +41,9 @@ func TestGenTplError(t *testing.T) {
 func TestGen(t *testing.T) {
 	fname := "t.go"
 	code := `package test
+import (
+    "bytes"
+)
 type Code struct {
     ID int ` + "`lua`" + `
     Name string ` + "`lua:name`" + `
@@ -45,6 +51,18 @@ type Code struct {
 
 func (c *Code) Test(s string) (byte, error) {
     return 0, nil
+}
+
+func (c *Code) Test2(s *string) (*bytes.Buffer, error) {
+    return nil, nil
+}
+
+func (c *Code) Test3(s *string) ([]*bytes.Buffer, error) {
+    return nil, nil
+}
+
+func (c *Code) Test4(s *string) ([]bytes.Buffer, error) {
+    return nil, nil
 }
 
 //lua:get
