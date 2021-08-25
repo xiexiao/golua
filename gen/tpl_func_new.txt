@@ -1,4 +1,4 @@
-func lua{{.StructName}}New(L *lua.State) int {
+func Lua{{.StructName}}New(L *lua.State) int {
 {{- if .Params}}
 {{- range .Params}}
     {{.Code}}
