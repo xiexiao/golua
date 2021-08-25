@@ -34,6 +34,8 @@ var codeTemplate = template.Must(funcTemplate.New("code").
 	Parse(tplCode))
 
 type Code struct {
+	FileName   string
+	CodeHeader string
 	PkgName    string
 	StructName string
 	ModuleName string

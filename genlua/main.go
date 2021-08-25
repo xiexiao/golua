@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -27,14 +28,27 @@ func main() {
 	if i > -1 {
 		nname = fname[:i] + "_lua" + fname[i:]
 	}
-	_, err = os.Stat(nname)
+	fs, err := os.OpenFile(nname, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
-		if !os.IsNotExist(err) {
-			os.Remove(nname)
+		log.Fatal(err)
+	}
+	defer fs.Close()
+	if _, err = fs.Seek(0, os.SEEK_SET); err != nil {
+		log.Fatal(err)
+	}
+	old, err := io.ReadAll(fs)
+	if len(old) > 0 {
+		if err = gen.CheckHeader(string(old)); err != nil {
+			log.Fatal(err)
+		}
+		if _, err = fs.Seek(0, os.SEEK_SET); err != nil {
+			log.Fatal(err)
+		}
+		if err = fs.Truncate(0); err != nil {
+			log.Fatal(err)
 		}
 	}
-	err = os.WriteFile(nname, []byte(out), os.ModePerm)
-	if err != nil {
+	if _, err = fs.Write(out); err != nil {
 		log.Fatal(err)
 	}
 }

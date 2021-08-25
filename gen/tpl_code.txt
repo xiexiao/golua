@@ -1,3 +1,7 @@
+{{.CodeHeader}}
+// source: {{.FileName}}
+// DO NOT EDIT!
+
 package {{.PkgName}}
 
 import (
