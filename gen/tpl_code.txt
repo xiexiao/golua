@@ -25,14 +25,7 @@ func Lua{{.StructName}}Init(L *lua.State) int {
 
 	L.SetGoFuncs(-2, lua_{{.StructName}}Funcs)
 	L.SetGoGC(-2, "Close")
-
 	L.Pop(1)
-{{ if .FuncNew}}
-	L.NewTable()
-	L.PushGoFunction(lua{{.StructName}}New)
-	L.SetField(-2, "new")
-{{ end }}
-	L.SetField(-2, "{{.ModuleName}}")
 	return 0
 }
 {{ if .FuncNew }}
