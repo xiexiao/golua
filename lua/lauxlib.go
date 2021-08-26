@@ -190,6 +190,22 @@ func (L *State) NewMetaTable(tname string) bool {
 	return C.luaL_newmetatable(L.s, Ctname) != 0
 }
 
+func (L *State) InitMetaTable(tname string, funcs map[string]LuaGoFunction) bool {
+	ret := L.NewMetaTable(tname)
+	if !ret {
+		return false
+	}
+
+	L.PushValue(-1)
+	L.SetField(-2, "__index")
+
+	L.SetGoFuncs(-2, funcs)
+	L.SetGC(-2, tname)
+
+	L.Pop(1)
+	return true
+}
+
 // luaL_newstate
 func NewState() *State {
 	ls := (C.luaL_newstate())

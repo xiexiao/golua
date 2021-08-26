@@ -15,21 +15,8 @@ import (
 
 const luaMT_{{.StructName}} = "_{{.PkgName}}.luaMT_{{.StructName}}"
 
-func lua_{{.StructName}}GC(L *lua.State) int {
-	L.RemoveUdata(1, luaMT_{{.StructName}})
-	L.PushBoolean(true)
-	return 1
-}
-
 func Lua{{.StructName}}Init(L *lua.State) int {
-	L.NewMetaTable(luaMT_{{.StructName}})
-
-	L.PushValue(-1)
-	L.SetField(-2, "__index")
-
-	L.SetGoFuncs(-2, lua_{{.StructName}}Funcs)
-	L.SetGoGC(-2, "Close")
-	L.Pop(1)
+	L.InitMetaTable(luaMT_{{.StructName}}, lua_{{.StructName}}Funcs)
 	return 0
 }
 {{ if .FuncNew }}
@@ -56,7 +43,5 @@ var lua_{{.StructName}}Funcs = map[string]lua.LuaGoFunction{
 {{- range .Funcs }}
 	"{{.Name}}": lua{{.StructName}}{{.FuncName}},
 {{- end }}
-
 {{- end }}
-	"Close": lua_{{.StructName}}GC,
 }

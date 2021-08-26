@@ -4,6 +4,15 @@ import (
 	"testing"
 )
 
+func TestCheckHeader(t *testing.T) {
+	fname := "t.go"
+	code := CodeHeader
+	err := CheckHeader(fname, code)
+	err1 := CheckHeader(fname, "")
+	t.Log(err)
+	t.Log(err1)
+}
+
 func TestGenError(t *testing.T) {
 	fname := "t.go"
 	code := ``

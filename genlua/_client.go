@@ -18,17 +18,12 @@ func ClientNew(addr string, port int) (*Client, error) {
 }
 
 //lua:get_nodes,check_error
-func (c *Client) Get_Nodes() ([]Node, error) {
-	nodes := make([]Node, 0)
-	nodes[0] = Node{
-		ID:   123,
-		Name: "测试",
-	}
-	return nodes, nil
+func (c *Client) Get_Nodes() (string, error) {
+	return "", nil
 }
 
 //lua:print
-func (c *Client) Print(s *Node, num int,
+func (c *Client) Print(s string, num int,
 	num1 int32, num2 int64, num3 uint32,
 	num4 string, num5 byte) int {
 	fmt.Println(s)
@@ -42,10 +37,6 @@ func (c *Client) Print(s *Node, num int,
 }
 
 //lua:get_summary,check_error
-func (clt *Client) Get_Summary() (*Node, error) {
-	node := &Node{
-		ID:   123,
-		Name: "测试",
-	}
-	return node, nil
+func (clt *Client) Get_Summary() (string, error) {
+	return "", nil
 }

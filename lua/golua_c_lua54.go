@@ -279,24 +279,31 @@ func (L *State) SetGoFuncs(n int,
 	}
 }
 
-// SetGoGC SetGoGC
-func (L *State) SetGoGC(n int, name string) int {
-	err := L.DoString(fmt.Sprintf(`
-	function g__gc(t) 
-		if t.%s and type(t.%s) == 'userdata' then
-			t.%s(t)
-		end 
-	end
-	`, name, name, name))
+func luaGC(L *State) int {
+	tname := L.CheckString(2)
+	L.RemoveUdata(1, tname)
+	return 0
+}
+
+// SetGC SetGC
+func (L *State) SetGC(n int, tname string) int {
+	L.LoadString(`
+local f, tname = ...
+if f and type(f) == 'userdata' and type(tname) == "string" then
+    return function(...)
+        local t = ... 
+        f(t, tname)
+    end
+end 
+return nil
+	`)
+	L.PushGoFunction(luaGC)
+	L.PushString(tname)
+	err := L.Call(2, 1)
 	if err != nil {
 		L.RaiseError(err.Error())
 	}
-	L.GetGlobal("g__gc")
 	L.SetField(n, "__gc")
-	err = L.DoString(`g__gc = nil`)
-	if err != nil {
-		L.RaiseError(err.Error())
-	}
 	return 0
 }
 
@@ -304,23 +311,13 @@ func (L *State) SetGoGC(n int, name string) int {
 // (1, 'call'), will set the meta funct __call
 func (L *State) SetMetaFunc(n int, name string) int {
 	field := "__" + name
-	fname := "g" + field
-	err := L.DoString(fmt.Sprintf(`
-	function %s(t) 
-		if t.%s and type(t.%s) == 'userdata' then
-			t.%s(t)
-		end 
-	end
-	`, fname, name, name, name))
-	if err != nil {
-		L.RaiseError(err.Error())
-	}
-	L.GetGlobal(field)
+	L.LoadString(fmt.Sprintf(`
+local t = ...
+if t.%s and type(t.%s) == 'userdata' then
+    t.%s(t)
+end 
+	`, name, name, name))
 	L.SetField(n, field)
-	err = L.DoString(fname + ` = nil`)
-	if err != nil {
-		L.RaiseError(err.Error())
-	}
 	return 0
 }
 
