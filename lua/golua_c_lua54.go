@@ -356,10 +356,13 @@ func setV(L *State, v reflect.Value, name string) {
 	case reflect.String:
 		L.PushString(v.String())
 		L.SetField(-2, name)
-	case reflect.Int:
+	case reflect.Int, reflect.Int64:
 		L.PushInteger(v.Int())
 		L.SetField(-2, name)
-	case reflect.Float64:
+	case reflect.Uint32, reflect.Uint64:
+		L.PushInteger(int64(v.Uint()))
+		L.SetField(-2, name)
+	case reflect.Float32, reflect.Float64:
 		L.PushNumber(v.Float())
 		L.SetField(-2, name)
 	case reflect.Bool:
