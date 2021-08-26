@@ -14,28 +14,8 @@ func Lua{{.StructName}}New(L *lua.State) int {
 {{- $sname := .StructName }}
     {{- range $idx, $el := .Results }}
     {{- if eq $idx 0 }}
-    L.LoadString(`
-local it = ...
-local t1 = getmetatable(it)
-local mt = {
-	__index = function(t, k)
-		if not k or k:sub(1, 1) == "_" then
-			return
-		end
-		if type(it["_" .. k]) == "userdata" then
-			return it["_" .. k](it)
-		end
-	end
-}
-setmetatable(t1, mt)
-return it
-	`)
 	if {{$el.Name}} != nil {
-	    L.NewUdata({{$el.Name}}, luaMT_{{ $sname }})
-        err := L.Call(1, 1)
-	    if err != nil {
-		    L.RaiseError(err.Error())
-	    }
+	    L.NewUdataWithField({{$el.Name}}, luaMT_{{ $sname }})
     } else {
         L.PushNil()
     }

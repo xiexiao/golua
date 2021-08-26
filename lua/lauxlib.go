@@ -271,6 +271,30 @@ func (L *State) NewUdata(it interface{}, tname string) {
 	L.SetMetaTable(-2)
 }
 
+func (L *State) NewUdataWithField(it interface{}, tname string) {
+	L.LoadString(`
+local it = ...
+local t1 = getmetatable(it)
+local mt = {
+	__index = function(t, k)
+		if not k or k:sub(1, 1) == "_" then
+			return
+		end
+		if type(it["_" .. k]) == "userdata" then
+			return it["_" .. k](it)
+		end
+	end
+}
+setmetatable(t1, mt)
+return it`)
+
+	L.NewUdata(it, tname)
+	err := L.Call(1, 1)
+	if err != nil {
+		L.RaiseError(err.Error())
+	}
+}
+
 func (L *State) GetUdata(n int, tname string) interface{} {
 	it := (*luaUdata)((L.CheckUdata(n, tname)))
 	fid := it.idx

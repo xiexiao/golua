@@ -23,10 +23,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	nname := fname + "_lua"
+	nname := fname + "_lua_"
 	i := strings.LastIndex(fname, ".")
 	if i > -1 {
-		nname = fname[:i] + "_lua" + fname[i:]
+		nname = fname[:i] + "_lua_" + fname[i:]
 	}
 	fs, err := os.OpenFile(nname, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
@@ -38,7 +38,7 @@ func main() {
 	}
 	old, err := io.ReadAll(fs)
 	if len(old) > 0 {
-		if err = gen.CheckHeader(string(old)); err != nil {
+		if err = gen.CheckHeader(nname, string(old)); err != nil {
 			log.Fatal(err)
 		}
 		if _, err = fs.Seek(0, os.SEEK_SET); err != nil {
