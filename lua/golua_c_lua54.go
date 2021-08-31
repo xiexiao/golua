@@ -475,7 +475,7 @@ func setVal(v reflect.Value, val string) {
 }
 
 // ToArray ToArray
-func (L *State) ToArray(ptr interface{}, n int) {
+func (L *State) ToArray(ptr interface{}, n int) int {
 	if !L.IsTable(n) {
 		return L.ArgError(n, "arg must table")
 	}
@@ -499,6 +499,7 @@ func (L *State) ToArray(ptr interface{}, n int) {
 		vals_ := reflect.Append(a0, vals...)
 		a0.Set(vals_)
 	}
+	return 0
 }
 
 func getV(L *lua.State, t reflect.Type, n int) *reflect.Value {
