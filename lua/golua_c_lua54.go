@@ -495,14 +495,14 @@ func (L *State) ToArray(ptr interface{}, n int) int {
 			}
 			L.Pop(1)
 		}
-		a0 := reflect.ValueOf(&s).Elem()
+		a0 := reflect.ValueOf(&ptr).Elem()
 		vals_ := reflect.Append(a0, vals...)
 		a0.Set(vals_)
 	}
 	return 0
 }
 
-func getV(L *lua.State, t reflect.Type, n int) *reflect.Value {
+func getV(L *State, t reflect.Type, n int) *reflect.Value {
 	var val reflect.Value
 	switch t.Kind() {
 	//case reflect.Ptr:
