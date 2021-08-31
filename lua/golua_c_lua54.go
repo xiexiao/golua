@@ -473,3 +473,49 @@ func setVal(v reflect.Value, val string) {
 		}
 	}
 }
+
+// ToArray ToArray
+func (L *State) ToArray(ptr interface{}, n int) {
+	if !L.IsTable(n) {
+		return L.ArgError(n, "arg must table")
+	}
+	tt := reflect.TypeOf(ptr)
+	if tt.Kind() != reflect.Slice {
+		return L.ArgError(n, "val must be slice")
+	}
+	tlen := int(L.ObjLen(n))
+	if tlen > 0 {
+		elemT := tt.Elem()
+		vals := make([]reflect.Value, 0, tlen)
+		for i := 1; i <= tlen; i++ {
+			L.RawGeti(n, i)
+			v := getV(L, elemT, -1)
+			if v != nil {
+				vals = append(vals, *v)
+			}
+			L.Pop(1)
+		}
+		a0 := reflect.ValueOf(&s).Elem()
+		vals_ := reflect.Append(a0, vals...)
+		a0.Set(vals_)
+	}
+}
+
+func getV(L *lua.State, t reflect.Type, n int) *reflect.Value {
+	var val reflect.Value
+	switch t.Kind() {
+	//case reflect.Ptr:
+	//return getV(L, t.Elem())
+	case reflect.String:
+		val = reflect.ValueOf(L.CheckString(n))
+	case reflect.Int, reflect.Int64, reflect.Uint32, reflect.Uint64:
+		val = reflect.ValueOf(L.CheckInteger(n))
+	case reflect.Float32, reflect.Float64:
+		val = reflect.ValueOf(L.CheckNumber(n))
+	case reflect.Bool:
+		val = reflect.ValueOf(L.ToBoolean(n))
+	default:
+		return nil
+	}
+	return &val
+}

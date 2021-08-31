@@ -3,6 +3,7 @@ package gen
 import (
 	"fmt"
 	"go/ast"
+	"log"
 	"strings"
 )
 
@@ -48,6 +49,8 @@ func GenGetCode(vtype, vname string, idx int) string {
 	switch vtype {
 	case "byte":
 		format = "%s := byte(L.CheckInteger(%d))"
+	case "[]byte":
+		format = "%s := L.ToBytes(%d)"
 	case "int":
 		format = "%s := L.CheckInteger(%d)"
 	case "uint16":
@@ -71,8 +74,13 @@ func GenGetCode(vtype, vname string, idx int) string {
 	case "bool":
 		format = "%s := L.ToBoolean(%d)"
 	default:
-		format = "%s := &%s{};L.LGetFromTable(%s, %d)"
-		code = fmt.Sprintf(format, vname, vtype, vname, idx)
+		if strings.HasPrefix(vtype, "[]") {
+			format = "%s := %s; L.ToArray(%s, %d)"
+			code = fmt.Sprintf(format, vname, vtype, vname, idx)
+		} else {
+			format = "%s := &%s{}; L.LGetFromTable(%s, %d)"
+			code = fmt.Sprintf(format, vname, vtype, vname, idx)
+		}
 		break
 	}
 	if format != "" && code == "" {
@@ -87,6 +95,8 @@ func GenPushCode(vtype, vname string, idx int) string {
 	switch vtype {
 	case "byte":
 		format = "L.PushInteger(int64(%s))"
+	case "[]byte":
+		format = "L.PushBytes(%s)"
 	case "int":
 		format = "L.PushInteger(int64(%s))"
 	case "uint16", "int16":
@@ -131,21 +141,36 @@ func ParseFunc(fd *ast.FuncDecl, check bool) ([]string, []string,
 	//paramNum := len(ftype.Params.List)
 	for i, x := range ftype.Params.List {
 		ptype := ""
-		if t, ok := x.Type.(*ast.Ident); ok {
-			ptype = t.Name
-		} else if t, ok := x.Type.(*ast.StarExpr); ok {
-			if t2, ok2 := t.X.(*ast.Ident); ok2 {
+		switch tt := x.Type.(type) {
+		case *ast.Ident:
+			ptype = tt.Name
+		case *ast.StarExpr:
+			if t2, ok2 := tt.X.(*ast.Ident); ok2 {
 				ptype = t2.Name
 			}
+		case *ast.ArrayType:
+			if id2, ok := tt.Elt.(*ast.Ident); ok {
+				ptype = "[]" + id2.Name
+			} else if see, ok := tt.Elt.(*ast.SelectorExpr); ok {
+				i1, ok1 := see.X.(*ast.Ident)
+				if ok1 {
+					ptype = i1.Name + "." + see.Sel.Name
+				}
+			}
+		default:
+			log.Printf("-->x.Type:%t,%+v\n", tt, tt)
+			break
 		}
-		pname := x.Names[0].Name
-		pcode := GenGetCode(ptype, pname, i+1)
-		paramList = append(paramList, pname)
-		if pcode != "" {
-			params = append(params, CodeItem{
-				Name: pname,
-				Code: pcode,
-			})
+		if ptype != "" {
+			pname := x.Names[0].Name
+			pcode := GenGetCode(ptype, pname, i+1)
+			paramList = append(paramList, pname)
+			if pcode != "" {
+				params = append(params, CodeItem{
+					Name: pname,
+					Code: pcode,
+				})
+			}
 		}
 	}
 
@@ -171,30 +196,30 @@ func ParseFunc(fd *ast.FuncDecl, check bool) ([]string, []string,
 	if ftype.Results != nil {
 		for _, x := range ftype.Results.List {
 			rtype := ""
-			//TODO:change to switch
-			if id, ok := x.Type.(*ast.Ident); ok {
-				rtype = id.Name
-			} else if se, ok := x.Type.(*ast.StarExpr); ok {
-				if ide, ok := se.X.(*ast.Ident); ok {
+			switch tt := x.Type.(type) {
+			case *ast.Ident:
+				rtype = tt.Name
+			case *ast.StarExpr:
+				if ide, ok := tt.X.(*ast.Ident); ok {
 					rtype = ide.Name
-				} else if see, ok := se.X.(*ast.SelectorExpr); ok {
+				} else if see, ok := tt.X.(*ast.SelectorExpr); ok {
 					i1, ok1 := see.X.(*ast.Ident)
 					if ok1 {
 						rtype = i1.Name + "." + see.Sel.Name
-						//fmt.Printf("%+v, %+v\n",see.X, see.Sel)
-						//fmt.Printf("%T, %T\n",see.X, see.Sel)
 					}
 				}
-			} else if at, ok := x.Type.(*ast.ArrayType); ok {
-				//fmt.Printf("%T, %+v\n", at.Elt, at.Elt)
-				if id2, ok := at.Elt.(*ast.Ident); ok {
+			case *ast.ArrayType:
+				if id2, ok := tt.Elt.(*ast.Ident); ok {
 					rtype = "[]" + id2.Name
-				} else if see, ok := at.Elt.(*ast.SelectorExpr); ok {
+				} else if see, ok := tt.Elt.(*ast.SelectorExpr); ok {
 					i1, ok1 := see.X.(*ast.Ident)
 					if ok1 {
 						rtype = i1.Name + "." + see.Sel.Name
 					}
 				}
+			default:
+				log.Printf("-->x.Type:%t,%+v\n", tt, tt)
+				break
 			}
 			if rtype != "" {
 				rname := fmt.Sprintf("%s%d", start, ri)

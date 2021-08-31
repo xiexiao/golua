@@ -43,20 +43,29 @@ func GenLua(filename string, in []byte) ([]byte, error) {
 				structName = name
 				for _, x := range stype.Fields.List {
 					if x.Tag != nil && len(x.Names) > 0 && strings.HasPrefix(x.Tag.Value, "`lua") {
-						ftype := x.Type.(*ast.Ident).Name
+						//TODO:switch
 						fname := x.Names[0].Name
 						name1 := ParseTag(x.Tag.Value)
 						if name1 != "" {
 							fname = name1
 						}
 						vname := fmt.Sprintf("v0.%s", fname)
-						fcode := GenPushCode(ftype, vname, 0)
-						if fcode != "" {
-							fields = append(fields, CodeField{
-								StructName: structName,
-								Name:       fname,
-								Code:       fcode,
-							})
+						ftype := ""
+						switch tt := x.Type.(type) {
+						case *ast.Ident:
+							ftype = tt.Name
+						default:
+							fmt.Printf("%T,%+v\n", x.Type, x.Type)
+						}
+						if ftype != "" {
+							fcode := GenPushCode(ftype, vname, 0)
+							if fcode != "" {
+								fields = append(fields, CodeField{
+									StructName: structName,
+									Name:       fname,
+									Code:       fcode,
+								})
+							}
 						}
 					}
 				}
