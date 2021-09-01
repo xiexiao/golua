@@ -383,6 +383,7 @@ func TestConv(t *testing.T) {
 	}
 }
 
+/*
 func TestDumpAndLoad(t *testing.T) {
 	L := NewState()
 	defer L.Close()
@@ -411,6 +412,7 @@ func TestDumpAndLoad(t *testing.T) {
 		t.Fatalf("Call error: %v", err)
 	}
 }
+*/
 
 func TestCustomDebugHook(t *testing.T) {
 	L := NewState()
@@ -433,5 +435,46 @@ func TestCustomDebugHook(t *testing.T) {
 		if err.Error() != "stop" {
 			t.Fatal("Error should be coming from the hook")
 		}
+	}
+}
+
+type testA struct {
+	ID   int    `lua`
+	Name string `lua`
+}
+
+func TestLPushToTable(t *testing.T) {
+	L := NewState()
+	defer L.Close()
+	ta := testA{
+		ID:   1,
+		Name: "Test123",
+	}
+
+	i := L.LPushToTable(&ta)
+	if i != 1 {
+		t.Fatalf("LPushToTable has an error")
+	}
+}
+
+func TestLGetFromGlobal(t *testing.T) {
+	L := NewState()
+	defer L.Close()
+
+	err := L.DoString(`
+        ID = 123
+        Name =  "Test456"
+	`)
+
+	if err != nil {
+		t.Fatalf("DoString have raised an error")
+	}
+
+	ta := testA{}
+
+	L.LGetFromGlobal(&ta)
+	t.Logf("%+v\n", ta)
+	if ta.ID != 123 {
+		t.Fatalf("LGetFromGlobal has an error")
 	}
 }

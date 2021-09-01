@@ -411,8 +411,8 @@ func (L *State) fromTable(ptr interface{}, n int,
 	}
 }
 
-// LGetGlobal LGetGlobal
-func (L *State) LGetGlobal(ptr interface{}) {
+// LGetFromGlobal LGetFromGlobal
+func (L *State) LGetFromGlobal(ptr interface{}) {
 	val := reflect.ValueOf(ptr)
 	fields, defaluts := getLuaField(val)
 	for name, v := range fields {
@@ -434,8 +434,12 @@ func (L *State) LGetGlobal(ptr interface{}) {
 func getFields(v reflect.Value,
 	fields map[string]reflect.Value,
 	defaults map[string]string) {
-	tt := v.Type()
-	for i := 0; i < v.NumField(); i++ {
+	vv := v
+	if v.Kind() == reflect.Ptr {
+		vv = v.Elem()
+	}
+	tt := vv.Type()
+	for i := 0; i < tt.NumField(); i++ {
 		fieldInfo := tt.Field(i)
 		if fieldInfo.Anonymous {
 			getFields(v.Field(i), fields, defaults)
@@ -457,7 +461,7 @@ func getFields(v reflect.Value,
 			name = fieldInfo.Name
 		}
 		if name != "" {
-			fields[name] = v.Field(i)
+			fields[name] = vv.Field(i)
 		}
 	}
 }
