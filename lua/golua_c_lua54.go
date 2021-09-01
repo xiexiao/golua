@@ -339,41 +339,55 @@ func (L *State) LPushErrorStr(s string) int {
 
 // LPushToTable LPushToTable
 func (L *State) LPushToTable(ptr interface{}) int {
-	fields, _ := getLuaField(ptr)
-	L.NewTable()
-	for name, v := range fields {
-		setV(L, v, name)
-	}
+	val := reflect.ValueOf(ptr)
+	pushV(L, val)
 	return 1
 }
 
-func setV(L *State, v reflect.Value, name string) {
-	switch v.Kind() {
+func pushV(L *State, val reflect.Value) bool {
+	switch val.Kind() {
 	case reflect.Ptr:
-		if !v.IsNil() {
-			setV(L, v.Elem(), name)
+		if !val.IsNil() {
+			return pushV(L, val.Elem())
 		}
 	case reflect.String:
-		L.PushString(v.String())
-		L.SetField(-2, name)
+		L.PushString(val.String())
 	case reflect.Int, reflect.Int64:
-		L.PushInteger(v.Int())
-		L.SetField(-2, name)
+		L.PushInteger(val.Int())
 	case reflect.Uint32, reflect.Uint64:
-		L.PushInteger(int64(v.Uint()))
-		L.SetField(-2, name)
+		L.PushInteger(int64(val.Uint()))
 	case reflect.Float32, reflect.Float64:
-		L.PushNumber(v.Float())
-		L.SetField(-2, name)
+		L.PushNumber(val.Float())
 	case reflect.Bool:
-		L.PushBoolean(v.Bool())
-		L.SetField(-2, name)
+		L.PushBoolean(val.Bool())
+	case reflect.Struct:
+		fields, _ := getLuaField(val)
+		L.NewTable()
+		for name, v := range fields {
+			if pushV(L, v) {
+				L.SetField(-2, name)
+			}
+		}
+	case reflect.Slice:
+		L.NewTable()
+		j := 1
+		for i := 0; i < val.Len(); i++ {
+			v := val.Index(i)
+			if pushV(L, v) {
+				L.RawSeti(-2, j)
+				j++
+			}
+		}
+	default:
+		return false
 	}
+	return true
 }
 
 // LGetFromTable LGetFromTable
 func (L *State) LGetFromTable(ptr interface{}, n int) {
-	fields, defaluts := getLuaField(ptr)
+	val := reflect.ValueOf(ptr)
+	fields, defaluts := getLuaField(val)
 	L.fromTable(ptr, n, fields, defaluts)
 }
 
@@ -399,7 +413,8 @@ func (L *State) fromTable(ptr interface{}, n int,
 
 // LGetGlobal LGetGlobal
 func (L *State) LGetGlobal(ptr interface{}) {
-	fields, defaluts := getLuaField(ptr)
+	val := reflect.ValueOf(ptr)
+	fields, defaluts := getLuaField(val)
 	for name, v := range fields {
 		L.GetGlobal(name)
 		var val string
@@ -419,15 +434,16 @@ func (L *State) LGetGlobal(ptr interface{}) {
 func getFields(v reflect.Value,
 	fields map[string]reflect.Value,
 	defaults map[string]string) {
+	tt := v.Type()
 	for i := 0; i < v.NumField(); i++ {
-		fieldInfo := v.Type().Field(i)
+		fieldInfo := tt.Field(i)
 		if fieldInfo.Anonymous {
 			getFields(v.Field(i), fields, defaults)
 			continue
 		}
 		tag := fieldInfo.Tag
 		name := tag.Get("lua")
-		if strings.Contains(name, ",") {
+		if name != "" && strings.Contains(name, ",") {
 			names := strings.Split(name, ",")
 			if len(names) > 1 {
 				name = names[0]
@@ -437,16 +453,19 @@ func getFields(v reflect.Value,
 				defaults[name] = names[1]
 			}
 		}
+		if name == "" {
+			name = fieldInfo.Name
+		}
 		if name != "" {
 			fields[name] = v.Field(i)
 		}
 	}
 }
 
-func getLuaField(ptr interface{}) (map[string]reflect.Value, map[string]string) {
+func getLuaField(v reflect.Value) (map[string]reflect.Value, map[string]string) {
 	fields := make(map[string]reflect.Value)
 	defaults := make(map[string]string)
-	elem := reflect.ValueOf(ptr).Elem()
+	elem := v //.Elem()
 	getFields(elem, fields, defaults)
 	return fields, defaults
 }
