@@ -1,4 +1,4 @@
-package gen
+package main
 
 import (
 	"fmt"
@@ -18,8 +18,18 @@ func ClientNew(addr string, port int) (*Client, error) {
 }
 
 //lua:get_nodes,check_error
-func (c *Client) Get_Nodes() (string, error) {
-	return "", nil
+func (c *Client) Get_Nodes() ([]Node, error) {
+    var list []Node
+    list = append(list, Node{
+        ID : 1,
+        Name: "test1",
+    })
+
+    list = append(list, Node{
+        ID : 2,
+        Name: "test2",
+    })
+	return list, nil
 }
 
 //lua:print
@@ -39,4 +49,9 @@ func (c *Client) Print(s string, num int,
 //lua:get_summary,check_error
 func (clt *Client) Get_Summary() (string, error) {
 	return "", nil
+}
+
+type Node struct {
+    ID int
+    Name string
 }

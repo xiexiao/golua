@@ -12,7 +12,7 @@ import (
 
 func ParseTag(tag string) string {
 	if strings.HasPrefix(tag, "`lua:") {
-		str := tag[5:len(tag)-1]
+		str := tag[5 : len(tag)-1]
 		list := strings.Split(str, ",")
 		if len(list) > 0 {
 			return list[0]
@@ -34,7 +34,7 @@ func ParseDoc(cg *ast.CommentGroup) (name string, makeUdata bool) {
 		if strings.HasPrefix(text, "//lua:") {
 			str := text[6:]
 			list := strings.Split(str, ",")
-			if len(list) > 0 && list[0] != makeUdataTag{
+			if len(list) > 0 && list[0] != makeUdataTag {
 				name = list[0]
 			}
 			makeUdata = strings.Contains(str, makeUdataTag)
@@ -120,9 +120,9 @@ func GenPushCode(vtype, vname string, idx int, makeUdata bool) string {
 	case "error":
 		format = "L.LPushError(%s)"
 	default:
-        if makeUdata {
-		    return fmt.Sprintf("L.NewUdataWithField(%s, luaMT_%s)", vname, vtype)
-        }
+		if makeUdata {
+			return fmt.Sprintf("L.NewUdataWithField(%s, luaMT_%s)", vname, vtype)
+		}
 		format = "L.LPushToTable(%s)"
 		break
 	}
@@ -132,7 +132,7 @@ func GenPushCode(vtype, vname string, idx int, makeUdata bool) string {
 	return code
 }
 
-func ParseFunc(fd *ast.FuncDecl, makeUdata bool) ([]string, []string,
+func ParseFunc(fd *ast.FuncDecl, idx int, makeUdata bool) ([]string, []string,
 	[]CodeItem, []CodeItem, string) {
 	var paramList []string
 	var resultList []string
@@ -165,7 +165,7 @@ func ParseFunc(fd *ast.FuncDecl, makeUdata bool) ([]string, []string,
 		}
 		if ptype != "" {
 			pname := x.Names[0].Name
-			pcode := GenGetCode(ptype, pname, i+2)
+			pcode := GenGetCode(ptype, pname, i+idx)
 			paramList = append(paramList, pname)
 			if pcode != "" {
 				params = append(params, CodeItem{

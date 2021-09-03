@@ -45,7 +45,7 @@ func GenLua(filename string, in []byte) ([]byte, error) {
 					if x.Tag != nil && len(x.Names) > 0 && strings.HasPrefix(x.Tag.Value, "`lua") {
 						//TODO:switch
 						fname := x.Names[0].Name
-                        cname := fname
+						cname := fname
 						name1 := ParseTag(x.Tag.Value)
 						if name1 != "" {
 							cname = name1
@@ -63,7 +63,7 @@ func GenLua(filename string, in []byte) ([]byte, error) {
 							if fcode != "" {
 								fields = append(fields, CodeField{
 									StructName: structName,
-									FieldName:       fname,
+									FieldName:  fname,
 									Name:       cname,
 									Code:       fcode,
 								})
@@ -98,8 +98,12 @@ func GenLua(filename string, in []byte) ([]byte, error) {
 					makeUdata = makeUdata1
 				}
 			}
+			paramIdx := 1
+			if fd.Recv != nil {
+				paramIdx = 2
+			}
 			paramList, resultList, params,
-				results, structID := ParseFunc(fd, makeUdata)
+				results, structID := ParseFunc(fd, paramIdx, makeUdata)
 			if fd.Recv != nil {
 				rtype := fd.Recv.List[0].Type
 				if rt1, ok := rtype.(*ast.StarExpr); ok {

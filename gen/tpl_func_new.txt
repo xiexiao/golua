@@ -1,24 +1,20 @@
 func Lua{{.StructName}}New(L *lua.State) int {
 {{- if .Params}}
 {{- range .Params}}
-    {{.Code}}
+        {{.Code}}
 {{- end}}
-{{end}}
+{{- end}}
 {{- $length := len .Results}}
 {{- if gt $length 0 }}
-	{{.ResultList | join}} := {{.StructName}}New({{.ParamList | join}})
+        {{.ResultList | join}} := {{.StructName}}New({{.ParamList | join}})
 {{- end}}
 {{- $sname := .StructName }}
     {{- range $idx, $el := .Results }}
     {{- if eq $idx 0 }}
-	if {{$el.Name}} != nil {
-	    L.NewUdataWithField({{$el.Name}}, luaMT_{{ $sname }})
-    } else {
-        L.PushNil()
-    }
+        L.NewUdataWithField({{$el.Name}}, luaMT_{{ $sname }})
     {{- else }}
-    {{ $el.Code }}
+        {{ $el.Code }}
     {{- end }}
     {{- end }}
-	return {{.ResultList | len}}
+        return {{.ResultList | len}}
 }

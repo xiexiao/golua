@@ -73,7 +73,7 @@ type CodeItem struct {
 
 type CodeField struct {
 	StructName string
-	FieldName       string
+	FieldName  string
 	Name       string
 	Code       string
 }
