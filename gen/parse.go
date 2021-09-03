@@ -89,7 +89,7 @@ func GenGetCode(vtype, vname string, idx int) string {
 	return code
 }
 
-func GenPushCode(vtype, vname string, idx int, makeUdata bool) string { 
+func GenPushCode(vtype, vname string, idx int, makeUdata bool) string {
 	format := ""
 	code := ""
 	switch vtype {
@@ -165,7 +165,7 @@ func ParseFunc(fd *ast.FuncDecl, makeUdata bool) ([]string, []string,
 		}
 		if ptype != "" {
 			pname := x.Names[0].Name
-			pcode := GenGetCode(ptype, pname, i+1)
+			pcode := GenGetCode(ptype, pname, i+2)
 			paramList = append(paramList, pname)
 			if pcode != "" {
 				params = append(params, CodeItem{

@@ -1,10 +1,10 @@
 func lua{{.StructName}}{{.FuncName}}(L *lua.State) int {
+	{{.StructID}} := L.GetUdata(1, luaMT_{{.StructName}}).(*{{.StructName}})
 {{- if .Params }}
 {{- range .Params }}
-    {{.Code}}
+        {{.Code}}
 {{- end }}
 {{- end }}
-	{{.StructID}} := L.GetUdata(1, luaMT_{{.StructName}}).(*{{.StructName}})
 	{{.ResultList | join }} := {{.StructID}}.{{.FuncName}}({{.ParamList | join}})
 {{- if .Results }}
 {{- range .Results }}

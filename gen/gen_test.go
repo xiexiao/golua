@@ -152,7 +152,7 @@ type Cat struct {
 }
 
 //lua:new,__make_udata
-func (c *Cat) New() (*Dog, error) {
+func (c *Cat) New(a string, b int) (*Dog, error) {
 	return nil, nil
 }`
 	buf, err := GenLua(fname, []byte(code))
