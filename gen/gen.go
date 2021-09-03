@@ -45,9 +45,10 @@ func GenLua(filename string, in []byte) ([]byte, error) {
 					if x.Tag != nil && len(x.Names) > 0 && strings.HasPrefix(x.Tag.Value, "`lua") {
 						//TODO:switch
 						fname := x.Names[0].Name
+                        cname := fname
 						name1 := ParseTag(x.Tag.Value)
 						if name1 != "" {
-							fname = name1
+							cname = name1
 						}
 						vname := fmt.Sprintf("v0.%s", fname)
 						ftype := ""
@@ -58,11 +59,12 @@ func GenLua(filename string, in []byte) ([]byte, error) {
 							fmt.Printf("%T,%+v\n", x.Type, x.Type)
 						}
 						if ftype != "" {
-							fcode := GenPushCode(ftype, vname, 0)
+							fcode := GenPushCode(ftype, vname, 0, false)
 							if fcode != "" {
 								fields = append(fields, CodeField{
 									StructName: structName,
-									Name:       fname,
+									FieldName:       fname,
+									Name:       cname,
 									Code:       fcode,
 								})
 							}
@@ -83,21 +85,21 @@ func GenLua(filename string, in []byte) ([]byte, error) {
 	var funcs []CodeFunc
 	for _, d := range f.Decls {
 		fd, ok := d.(*ast.FuncDecl)
-		checkError := false
+		makeUdata := false
 		if ok {
 			funcName := fd.Name.Name
 			name := funcName
 			if fd.Doc != nil {
-				funcName1, checkError1 := ParseDoc(fd.Doc)
+				funcName1, makeUdata1 := ParseDoc(fd.Doc)
 				if funcName1 != "" {
 					name = funcName1
 				}
-				if checkError1 {
-					checkError = checkError1
+				if makeUdata1 {
+					makeUdata = makeUdata1
 				}
 			}
 			paramList, resultList, params,
-				results, structID, errCheck := ParseFunc(fd, checkError)
+				results, structID := ParseFunc(fd, makeUdata)
 			if fd.Recv != nil {
 				rtype := fd.Recv.List[0].Type
 				if rt1, ok := rtype.(*ast.StarExpr); ok {
@@ -108,7 +110,6 @@ func GenLua(filename string, in []byte) ([]byte, error) {
 							FuncName:   funcName,
 							StructID:   structID,
 							StructName: structName,
-							ErrCheck:   errCheck,
 							ParamList:  paramList,
 							ResultList: resultList,
 							Params:     params,
@@ -121,7 +122,6 @@ func GenLua(filename string, in []byte) ([]byte, error) {
 				if funcName == structName+"New" {
 					funcNew = &CodeFunc{
 						StructName: structName,
-						ErrCheck:   errCheck,
 						ParamList:  paramList,
 						ResultList: resultList,
 						Params:     params,

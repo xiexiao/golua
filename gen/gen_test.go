@@ -21,6 +21,31 @@ func TestGenError(t *testing.T) {
 	t.Log(err)
 }
 
+func TestGenBytes(t *testing.T) {
+	fname := "t.go"
+	code := `package test
+type Code struct {
+    ID int ` + "`lua`" + `
+    Buf []byte ` + "`lua:name`" + `
+}
+
+func CodeNew(s byte)(*Code, error) {
+    return nil, nil
+}
+
+func (c *Code) ResetBuffer(buf []byte) []byte {
+    return nil
+}
+
+func (c *Code) ResetString(buf []string) []string{
+    return nil
+}
+    `
+	buf, err := GenLua(fname, []byte(code))
+	t.Log(string(buf))
+	t.Log(err)
+}
+
 func TestGenNew(t *testing.T) {
 	fname := "t.go"
 	code := `package test
@@ -102,14 +127,14 @@ func (c *Code) Print(s *Node, num int,
 	return num * num
 }
 
-//lua:get_strings,check_error
+//lua:get_strings
 func (c *Code) Get_Strings() ([]string, error) {
 	list := make([]string, 0)
 	list = append(list, "test1")
 	return list, nil
 }
 
-//lua:print2,check_error
+//lua:print2
 func (c *Code) Print2(s string) (uint64, error) {
     return 1, nil
 }
@@ -117,4 +142,22 @@ func (c *Code) Print2(s string) (uint64, error) {
 	buf, err := GenLua(fname, []byte(code))
 	t.Log(buf)
 	t.Log(err)
+}
+
+func TestSetMetatable(t *testing.T) {
+	fname := "t.go"
+	code := `package test
+type Cat struct {
+    Name string ` + "`lua:name`" + `
+}
+
+//lua:new,__make_udata
+func (c *Cat) New() (*Dog, error) {
+	return nil, nil
+}`
+	buf, err := GenLua(fname, []byte(code))
+    if err != nil {
+        t.Errorf("Gen Code get error:%s\n", err)
+    }
+	t.Log(string(buf))
 }

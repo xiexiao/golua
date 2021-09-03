@@ -62,8 +62,6 @@ type CodeFunc struct {
 	ResultList []string
 	ParamList  []string
 
-	ErrCheck string
-
 	Params  []CodeItem
 	Results []CodeItem
 }
@@ -75,6 +73,7 @@ type CodeItem struct {
 
 type CodeField struct {
 	StructName string
+	FieldName       string
 	Name       string
 	Code       string
 }

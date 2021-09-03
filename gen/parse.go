@@ -12,7 +12,7 @@ import (
 
 func ParseTag(tag string) string {
 	if strings.HasPrefix(tag, "`lua:") {
-		str := tag[5:]
+		str := tag[5:len(tag)-1]
 		list := strings.Split(str, ",")
 		if len(list) > 0 {
 			return list[0]
@@ -26,18 +26,18 @@ func AddImports(names []string, imports []PkgImport, name string) {
 }
 */
 
-const checkErrorTag = "check_error"
+const makeUdataTag = "__make_udata" //返回用户定义类型，绑定到特定的metatable上的
 
-func ParseDoc(cg *ast.CommentGroup) (name string, checkError bool) {
+func ParseDoc(cg *ast.CommentGroup) (name string, makeUdata bool) {
 	if cg != nil && len(cg.List) > 0 {
 		text := cg.List[0].Text
 		if strings.HasPrefix(text, "//lua:") {
 			str := text[6:]
 			list := strings.Split(str, ",")
-			if len(list) > 0 && list[0] != checkErrorTag {
+			if len(list) > 0 && list[0] != makeUdataTag{
 				name = list[0]
 			}
-			checkError = strings.Contains(str, checkErrorTag)
+			makeUdata = strings.Contains(str, makeUdataTag)
 		}
 	}
 	return
@@ -89,7 +89,7 @@ func GenGetCode(vtype, vname string, idx int) string {
 	return code
 }
 
-func GenPushCode(vtype, vname string, idx int) string {
+func GenPushCode(vtype, vname string, idx int, makeUdata bool) string { 
 	format := ""
 	code := ""
 	switch vtype {
@@ -120,6 +120,9 @@ func GenPushCode(vtype, vname string, idx int) string {
 	case "error":
 		format = "L.LPushError(%s)"
 	default:
+        if makeUdata {
+		    return fmt.Sprintf("L.NewUdataWithField(%s, luaMT_%s)", vname, vtype)
+        }
 		format = "L.LPushToTable(%s)"
 		break
 	}
@@ -129,13 +132,12 @@ func GenPushCode(vtype, vname string, idx int) string {
 	return code
 }
 
-func ParseFunc(fd *ast.FuncDecl, check bool) ([]string, []string,
-	[]CodeItem, []CodeItem, string, string) {
+func ParseFunc(fd *ast.FuncDecl, makeUdata bool) ([]string, []string,
+	[]CodeItem, []CodeItem, string) {
 	var paramList []string
 	var resultList []string
 	var params []CodeItem
 	var results []CodeItem
-	errCheck := ""
 
 	ftype := fd.Type
 	//paramNum := len(ftype.Params.List)
@@ -224,7 +226,7 @@ func ParseFunc(fd *ast.FuncDecl, check bool) ([]string, []string,
 			if rtype != "" {
 				rname := fmt.Sprintf("%s%d", start, ri)
 				resultList = append(resultList, rname)
-				rcode := GenPushCode(rtype, rname, ri)
+				rcode := GenPushCode(rtype, rname, ri, makeUdata)
 				if rcode != "" {
 					results = append(results, CodeItem{
 						Name: rname,
@@ -236,7 +238,7 @@ func ParseFunc(fd *ast.FuncDecl, check bool) ([]string, []string,
 		}
 	}
 
-	return paramList, resultList, params, results, structID, errCheck
+	return paramList, resultList, params, results, structID
 }
 
 /*

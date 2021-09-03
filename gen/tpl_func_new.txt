@@ -7,9 +7,6 @@ func Lua{{.StructName}}New(L *lua.State) int {
 {{- $length := len .Results}}
 {{- if gt $length 0 }}
 	{{.ResultList | join}} := {{.StructName}}New({{.ParamList | join}})
-{{ if .ErrCheck}}
-	L.LErrorCheck({{.ErrCheck}})
-{{ end}}
 {{- end}}
 {{- $sname := .StructName }}
     {{- range $idx, $el := .Results }}

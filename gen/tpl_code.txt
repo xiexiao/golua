@@ -35,7 +35,7 @@ func Lua{{.StructName}}Init(L *lua.State) int {
 var lua_{{.StructName}}Funcs = map[string]lua.LuaGoFunction{
 {{- if .Fields}}
 {{- range .Fields }}
-	"_{{.Name}}": lua_{{.StructName}}{{.Name}},
+	"_{{.Name}}": lua_{{.StructName}}{{.FieldName}},
 {{- end }}
 
 {{- end }}

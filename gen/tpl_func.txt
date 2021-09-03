@@ -5,14 +5,10 @@ func lua{{.StructName}}{{.FuncName}}(L *lua.State) int {
 {{- end }}
 {{- end }}
 	{{.StructID}} := L.GetUdata(1, luaMT_{{.StructName}}).(*{{.StructName}})
-
 	{{.ResultList | join }} := {{.StructID}}.{{.FuncName}}({{.ParamList | join}})
-{{- if .ErrCheck }}
-	L.LErrorCheck({{.ErrCheck}})
-{{- end }}
 {{- if .Results }}
 {{- range .Results }}
-    {{.Code}}
+        {{.Code}}
 {{- end }}
 {{- end }}
 	return {{.ResultList | len}}

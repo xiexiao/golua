@@ -272,6 +272,10 @@ func (L *State) NewUdata(it interface{}, tname string) {
 }
 
 func (L *State) NewUdataWithField(it interface{}, tname string) {
+	if it == nil {
+		L.PushNil()
+		return
+	}
 	L.LoadString(`
 local it = ...
 local t1 = getmetatable(it)
