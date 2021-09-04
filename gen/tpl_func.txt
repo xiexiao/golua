@@ -5,7 +5,11 @@ func lua{{.StructName}}{{.FuncName}}(L *lua.State) int {
         {{.Code}}
 {{- end }}
 {{- end }}
+{{- if .ResultList }}
 	{{.ResultList | join }} := {{.StructID}}.{{.FuncName}}({{.ParamList | join}})
+{{- else }}
+	{{.StructID}}.{{.FuncName}}({{.ParamList | join}})
+{{- end }}
 {{- if .Results }}
 {{- range .Results }}
         {{.Code}}
