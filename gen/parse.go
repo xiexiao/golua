@@ -142,7 +142,7 @@ func ParseFunc(fd *ast.FuncDecl, idx int, makeUdata bool) ([]string, []string,
 	ftype := fd.Type
 	//paramNum := len(ftype.Params.List)
 	codeI := idx
-	for i, x := range ftype.Params.List {
+	for _, x := range ftype.Params.List {
 		ptype := ""
 		switch tt := x.Type.(type) {
 		case *ast.Ident:

@@ -279,6 +279,10 @@ func (L *State) NewUdataWithField(it interface{}, tname string) {
 	L.LoadString(`
 local it = ...
 local t1 = getmetatable(it)
+if not t1 then 
+    --warn
+    return
+end
 local mt = {
 	__index = function(t, k)
 		if not k or k:sub(1, 1) == "_" then
