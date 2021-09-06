@@ -141,6 +141,7 @@ func ParseFunc(fd *ast.FuncDecl, idx int, makeUdata bool) ([]string, []string,
 
 	ftype := fd.Type
 	//paramNum := len(ftype.Params.List)
+	codeI := idx
 	for i, x := range ftype.Params.List {
 		ptype := ""
 		switch tt := x.Type.(type) {
@@ -164,14 +165,17 @@ func ParseFunc(fd *ast.FuncDecl, idx int, makeUdata bool) ([]string, []string,
 			break
 		}
 		if ptype != "" {
-			pname := x.Names[0].Name
-			pcode := GenGetCode(ptype, pname, i+idx)
-			paramList = append(paramList, pname)
-			if pcode != "" {
-				params = append(params, CodeItem{
-					Name: pname,
-					Code: pcode,
-				})
+			for _, xn := range x.Names {
+				pname := xn.Name
+				pcode := GenGetCode(ptype, pname, codeI)
+				paramList = append(paramList, pname)
+				if pcode != "" {
+					params = append(params, CodeItem{
+						Name: pname,
+						Code: pcode,
+					})
+					codeI = codeI + 1
+				}
 			}
 		}
 	}

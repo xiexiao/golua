@@ -21,6 +21,21 @@ func TestGenError(t *testing.T) {
 	t.Log(err)
 }
 
+func TestGenUseSame(t *testing.T) {
+	fname := "t.go"
+	code := `package test
+type Code struct {
+    ID int ` + "`lua`" + `
+}
+
+func (c *Code) Test1(a, b string) {
+}
+    `
+	buf, err := GenLua(fname, []byte(code))
+	t.Log(string(buf))
+	t.Log(err)
+}
+
 func TestGenBytes(t *testing.T) {
 	fname := "t.go"
 	code := `package test
