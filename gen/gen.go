@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
+	"go/format"
 	"go/parser"
 	"go/token"
 	"strings"
@@ -21,7 +22,7 @@ func CheckHeader(fname, s string) error {
 	return nil
 }
 
-func GenLua(filename string, in []byte) ([]byte, error) {
+func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filename, in, parser.ParseComments)
 	if err != nil {
@@ -139,13 +140,16 @@ func GenLua(filename string, in []byte) ([]byte, error) {
 	if len(funcs) > 0 {
 		code.Funcs = funcs
 	}
-	return codeExec(codeTemplate, code)
+	return codeExec(codeTemplate, code, formatCode)
 }
 
-func codeExec(t *template.Template, data interface{}) ([]byte, error) {
+func codeExec(t *template.Template, data interface{}, formatCode bool) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	if err := t.Execute(buf, data); err != nil {
 		return nil, err
+	}
+	if formatCode {
+		return format.Source(buf.Bytes())
 	}
 	return buf.Bytes(), nil
 }

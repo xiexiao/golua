@@ -16,7 +16,7 @@ func TestCheckHeader(t *testing.T) {
 func TestGenError(t *testing.T) {
 	fname := "t.go"
 	code := ``
-	buf, err := GenLua(fname, []byte(code))
+	buf, err := GenLua(fname, []byte(code), true)
 	t.Log(string(buf))
 	t.Log(err)
 }
@@ -31,7 +31,7 @@ type Code struct {
 func (c *Code) Test1(a, b string) {
 }
     `
-	buf, err := GenLua(fname, []byte(code))
+	buf, err := GenLua(fname, []byte(code), true)
 	t.Log(string(buf))
 	t.Log(err)
 }
@@ -56,7 +56,7 @@ func (c *Code) ResetString(buf []string) []string{
     return nil
 }
     `
-	buf, err := GenLua(fname, []byte(code))
+	buf, err := GenLua(fname, []byte(code), true)
 	t.Log(string(buf))
 	t.Log(err)
 }
@@ -76,13 +76,13 @@ func CodeNew(s byte, s2 string)(*Code, error) {
 func (c *Code) Check() {
 }
     `
-	buf, err := GenLua(fname, []byte(code))
+	buf, err := GenLua(fname, []byte(code), true)
 	t.Log(string(buf))
 	t.Log(err)
 }
 
 func TestGenTplError(t *testing.T) {
-	buf, err := codeExec(codeTemplate, 0)
+	buf, err := codeExec(codeTemplate, 0, true)
 	t.Log(err)
 	t.Log(string(buf))
 }
@@ -154,7 +154,7 @@ func (c *Code) Print2(s string) (uint64, error) {
     return 1, nil
 }
     `
-	buf, err := GenLua(fname, []byte(code))
+	buf, err := GenLua(fname, []byte(code), true)
 	t.Log(string(buf))
 	t.Log(err)
 }
@@ -170,7 +170,7 @@ type Cat struct {
 func (c *Cat) New(a string, b int) (*Dog, error) {
 	return nil, nil
 }`
-	buf, err := GenLua(fname, []byte(code))
+	buf, err := GenLua(fname, []byte(code), true)
 	if err != nil {
 		t.Errorf("Gen Code get error:%s\n", err)
 	}

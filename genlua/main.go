@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	out, err := gen.GenLua(fname, data)
+	out, err := gen.GenLua(fname, data, true)
 	if err != nil {
 		log.Fatal(err)
 	}
