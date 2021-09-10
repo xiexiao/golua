@@ -319,3 +319,11 @@ func (L *State) LErrorCheck(err error) {
 		L.RaiseError(err.Error())
 	}
 }
+
+func (L *State) LPushBytes(b []byte) {
+	if b == nil {
+		L.PushNil()
+		return
+	}
+	L.PushBytes(b)
+}

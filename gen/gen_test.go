@@ -191,7 +191,8 @@ func (c *Code) Test1(a, b string) []NodeInfo {
 }
 
 //lua:,__udata_to_bytes
-func (c *Code) Test3(a []byte) int {
+func (c *Code) Test3(a []byte) ([]byte, int, error)  {
+    return nil, 0, nil
 }
     `
 	buf, err := GenLua(fname, []byte(code), true)

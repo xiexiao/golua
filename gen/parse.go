@@ -103,7 +103,7 @@ func GenPushCode(vtype, vname string, idx int, makeUdata bool) string {
 	case "byte":
 		format = "L.PushInteger(int64(%s))"
 	case "[]byte":
-		format = "L.PushBytes(%s)"
+		format = "L.LPushBytes(%s)"
 	case "int":
 		format = "L.PushInteger(int64(%s))"
 	case "uint16", "int16":
