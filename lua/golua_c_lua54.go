@@ -1,4 +1,5 @@
-//+build lua54
+//go:build lua54
+// +build lua54
 
 package lua
 
@@ -347,9 +348,10 @@ func (L *State) LPushToTable(ptr interface{}) int {
 func pushV(L *State, val reflect.Value) bool {
 	switch val.Kind() {
 	case reflect.Ptr:
-		if !val.IsNil() {
-			return pushV(L, val.Elem())
+		if val.IsNil() {
+			return false
 		}
+		return pushV(L, val.Elem())
 	case reflect.String:
 		L.PushString(val.String())
 	case reflect.Int, reflect.Int64:
@@ -369,6 +371,9 @@ func pushV(L *State, val reflect.Value) bool {
 			}
 		}
 	case reflect.Slice:
+		if val.IsNil() {
+			return false
+		}
 		L.NewTable()
 		j := 1
 		for i := 0; i < val.Len(); i++ {

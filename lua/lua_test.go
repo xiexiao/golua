@@ -2,6 +2,7 @@ package lua
 
 import (
 	"testing"
+	"time"
 	"unsafe"
 )
 
@@ -455,6 +456,48 @@ func TestLPushToTable(t *testing.T) {
 	if i != 1 {
 		t.Fatalf("LPushToTable has an error")
 	}
+}
+
+type testB struct {
+	IP           string    `lua` //
+	NumCPU       uint32    `lua` //
+	Mem          uint64    `lua` //
+	BinID        uint64    `lua` //
+	ChildNum     uint16    `lua` //
+	ChildRunning uint16    `lua` //
+	CachedNum    uint32    `lua` // cached num
+	CachedSize   uint64    `lua` // cached size
+	Status       string    `lua` //
+	TimeOffset   *float64  `lua` //
+	TimeZone     string    `lua` //
+	DownloadPort uint16    `lua` //
+	LastActive   time.Time `lua` //
+	CurrentTime  time.Time `lua` //
+	GOARCH       string    `lua` //
+	GOOS         string    `lua` //
+}
+
+func TestLPushToTable2(t *testing.T) {
+	L := NewState()
+	defer L.Close()
+	var tbs []testB
+	tbs = append(tbs, testB{
+		NumCPU: 1,
+		IP:     "Test123",
+	})
+
+	tbs = append(tbs, testB{
+		NumCPU: 1024,
+		IP:     "Test678",
+	})
+	t.Log(tbs)
+	i := L.LPushToTable(tbs)
+	if i != 1 {
+		t.Fatalf("LPushToTable2 has an error")
+	}
+
+	i2 := L.LPushToTable(&tbs)
+	t.Log(i2)
 }
 
 func TestLGetFromGlobal(t *testing.T) {

@@ -2,6 +2,7 @@ package gen
 
 import (
 	"testing"
+	"time"
 )
 
 func TestCheckHeader(t *testing.T) {
@@ -175,4 +176,40 @@ func (c *Cat) New(a string, b int) (*Dog, error) {
 		t.Errorf("Gen Code get error:%s\n", err)
 	}
 	t.Log(string(buf))
+}
+
+func TestGenPushTable(t *testing.T) {
+	fname := "t.go"
+	code := `package test
+type Code struct {
+    ID int ` + "`lua`" + `
+}
+
+func (c *Code) Test1(a, b string) []NodeInfo {
+    return nil
+}
+    `
+	buf, err := GenLua(fname, []byte(code), true)
+	t.Log(string(buf))
+	t.Log(err)
+}
+
+// NodeInfo NodeInfo
+type NodeInfo struct {
+	IP           string    `lua` //
+	NumCPU       uint32    `lua` //
+	Mem          uint64    `lua` //
+	BinID        uint64    `lua` //
+	ChildNum     uint16    `lua` //
+	ChildRunning uint16    `lua` //
+	CachedNum    uint32    `lua` // cached num
+	CachedSize   uint64    `lua` // cached size
+	Status       string    `lua` //
+	TimeOffset   *float64  `lua` //
+	TimeZone     string    `lua` //
+	DownloadPort uint16    `lua` //
+	LastActive   time.Time `lua` //
+	CurrentTime  time.Time `lua` //
+	GOARCH       string    `lua` //
+	GOOS         string    `lua` //
 }
