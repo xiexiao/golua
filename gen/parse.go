@@ -26,9 +26,10 @@ func AddImports(names []string, imports []PkgImport, name string) {
 }
 */
 
-const makeUdataTag = "__make_udata" //返回用户定义类型，绑定到特定的metatable上的
+const makeUdataTag = "__make_udata"        //返回用户定义类型，绑定到特定的metatable上的
+const udataToBytesTag = "__udata_to_bytes" //支持lua的用户类型（ud+size）返回到[]byte的golang类型上
 
-func ParseDoc(cg *ast.CommentGroup) (name string, makeUdata bool) {
+func ParseDoc(cg *ast.CommentGroup) (name string, makeUdata bool, udataToBytes bool) {
 	if cg != nil && len(cg.List) > 0 {
 		text := cg.List[0].Text
 		if strings.HasPrefix(text, "//lua:") {
@@ -38,18 +39,24 @@ func ParseDoc(cg *ast.CommentGroup) (name string, makeUdata bool) {
 				name = list[0]
 			}
 			makeUdata = strings.Contains(str, makeUdataTag)
+			udataToBytes = strings.Contains(str, udataToBytesTag)
 		}
 	}
 	return
 }
 
-func GenGetCode(vtype, vname string, idx int) string {
+func GenGetCode(vtype, vname string, idx int, udataToBytes bool) string {
 	format := ""
 	code := ""
 	switch vtype {
 	case "byte":
 		format = "%s := byte(L.CheckInteger(%d))"
 	case "[]byte":
+		if udataToBytes {
+			format = "%s := L.UdataToBytes(%d, %d)"
+			code = fmt.Sprintf(format, vname, idx, idx+1)
+			return code
+		}
 		format = "%s := L.ToBytes(%d)"
 	case "int":
 		format = "%s := L.CheckInteger(%d)"
@@ -132,7 +139,7 @@ func GenPushCode(vtype, vname string, idx int, makeUdata bool) string {
 	return code
 }
 
-func ParseFunc(fd *ast.FuncDecl, idx int, makeUdata bool) ([]string, []string,
+func ParseFunc(fd *ast.FuncDecl, idx int, makeUdata bool, udataToBytes bool) ([]string, []string,
 	[]CodeItem, []CodeItem, string) {
 	var paramList []string
 	var resultList []string
@@ -167,7 +174,7 @@ func ParseFunc(fd *ast.FuncDecl, idx int, makeUdata bool) ([]string, []string,
 		if ptype != "" {
 			for _, xn := range x.Names {
 				pname := xn.Name
-				pcode := GenGetCode(ptype, pname, codeI)
+				pcode := GenGetCode(ptype, pname, codeI, udataToBytes)
 				paramList = append(paramList, pname)
 				if pcode != "" {
 					params = append(params, CodeItem{

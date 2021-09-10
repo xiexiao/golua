@@ -87,16 +87,20 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 	for _, d := range f.Decls {
 		fd, ok := d.(*ast.FuncDecl)
 		makeUdata := false
+		udataToBytes := false
 		if ok {
 			funcName := fd.Name.Name
 			name := funcName
 			if fd.Doc != nil {
-				funcName1, makeUdata1 := ParseDoc(fd.Doc)
+				funcName1, makeUdata1, udataToBytes1 := ParseDoc(fd.Doc)
 				if funcName1 != "" {
 					name = funcName1
 				}
 				if makeUdata1 {
 					makeUdata = makeUdata1
+				}
+				if udataToBytes1 {
+					udataToBytes = udataToBytes1
 				}
 			}
 			paramIdx := 1
@@ -104,7 +108,7 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 				paramIdx = 2
 			}
 			paramList, resultList, params,
-				results, structID := ParseFunc(fd, paramIdx, makeUdata)
+				results, structID := ParseFunc(fd, paramIdx, makeUdata, udataToBytes)
 			if fd.Recv != nil {
 				rtype := fd.Recv.List[0].Type
 				if rt1, ok := rtype.(*ast.StarExpr); ok {

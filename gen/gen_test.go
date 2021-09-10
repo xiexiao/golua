@@ -49,6 +49,7 @@ func CodeNew(s byte)(*Code, error) {
     return nil, nil
 }
 
+//lua:,__udata_to_bytes
 func (c *Code) ResetBuffer(buf []byte) []byte {
     return nil
 }
@@ -187,6 +188,10 @@ type Code struct {
 
 func (c *Code) Test1(a, b string) []NodeInfo {
     return nil
+}
+
+//lua:,__udata_to_bytes
+func (c *Code) Test3(a []byte) int {
 }
     `
 	buf, err := GenLua(fname, []byte(code), true)
