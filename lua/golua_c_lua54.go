@@ -132,6 +132,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -363,11 +364,16 @@ func pushV(L *State, val reflect.Value) bool {
 	case reflect.Bool:
 		L.PushBoolean(val.Bool())
 	case reflect.Struct:
-		fields, _ := getLuaField(val)
-		L.NewTable()
-		for name, v := range fields {
-			if pushV(L, v) {
-				L.SetField(-2, name)
+		if val.Type() == reflect.TypeOf(time.Time{}) {
+			t := val.Interface().(time.Time)
+			L.PushString(t.Format("2006-01-02 15:04:05"))
+		} else {
+			fields, _ := getLuaField(val)
+			L.NewTable()
+			for name, v := range fields {
+				if pushV(L, v) {
+					L.SetField(-2, name)
+				}
 			}
 		}
 	case reflect.Slice:
