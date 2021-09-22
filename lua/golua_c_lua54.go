@@ -377,9 +377,6 @@ func pushV(L *State, val reflect.Value) bool {
 			}
 		}
 	case reflect.Slice:
-		if val.IsNil() {
-			return false
-		}
 		L.NewTable()
 		j := 1
 		for i := 0; i < val.Len(); i++ {
