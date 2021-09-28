@@ -1,19 +1,21 @@
-func lua{{.StructName}}{{.FuncName}}(L *lua.State) int {
-	{{.StructID}} := L.GetUdata(1, luaMT_{{.StructName}}).(*{{.StructName}})
-{{- if .Params }}
-{{- range .Params }}
-        {{.Code}}
-{{- end }}
-{{- end }}
-{{- if .ResultList }}
-	{{.ResultList | join }} := {{.StructID}}.{{.FuncName}}({{.ParamList | join}})
-{{- else }}
-	{{.StructID}}.{{.FuncName}}({{.ParamList | join}})
-{{- end }}
-{{- if .Results }}
-{{- range .Results }}
-        {{.Code}}
-{{- end }}
-{{- end }}
+func {{.FuncPrefix}}{{.StructName}}{{.FuncName}}(L *lua.State) int {
+    {{- if .StructID}}
+	    {{.StructID}} := L.GetUdata(1, luaMT_{{.StructName}}).(*{{.StructName}})
+    {{- end }}
+    {{- if .Params }}
+        {{- range .Params }}
+            {{.Code}}
+        {{- end }}
+    {{- end }}
+    {{- if .ResultList }}
+	    {{.ResultList | join }} := {{if .StructID}}{{.StructID}}.{{end}}{{.FuncName}}({{.ParamList | join}})
+    {{- else }}
+	    {{if .StructID}}{{.StructID}}.{{end}}{{.FuncName}}({{.ParamList | join}})
+    {{- end }}
+    {{- if .Results }}
+        {{- range .Results }}
+            {{.Code}}
+        {{- end }}
+    {{- end }}
 	return {{.ResultList | len}}
 }

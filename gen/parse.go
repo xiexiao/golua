@@ -29,14 +29,31 @@ func AddImports(names []string, imports []PkgImport, name string) {
 const makeUdataTag = "__make_udata"        //返回用户定义类型，绑定到特定的metatable上的
 const udataToBytesTag = "__udata_to_bytes" //支持lua的用户类型（ud+size）返回到[]byte的golang类型上
 
-func ParseDoc(cg *ast.CommentGroup) (name string, makeUdata bool, udataToBytes bool) {
+func ParseDoc(cg *ast.CommentGroup) (ok bool, name, prefix string, makeUdata, udataToBytes bool) {
+	ok = false
 	if cg != nil && len(cg.List) > 0 {
 		text := cg.List[0].Text
-		if strings.HasPrefix(text, "//lua:") {
-			str := text[6:]
+		ltext := strings.ToLower(text)
+		got := false
+		noPrefix := false
+		idx := 6
+		if strings.HasPrefix(ltext, "//lua:") {
+			got = true
+		} else if strings.HasPrefix(ltext, "//_lua:") {
+			got = true
+			idx = 7
+			noPrefix = true
+		}
+		if got {
+			ok = true
+			str := text[idx:]
 			list := strings.Split(str, ",")
+			prefix = text[2:5]
 			if len(list) > 0 && list[0] != makeUdataTag {
 				name = list[0]
+			}
+			if noPrefix {
+				prefix = ""
 			}
 			makeUdata = strings.Contains(str, makeUdataTag)
 			udataToBytes = strings.Contains(str, udataToBytesTag)

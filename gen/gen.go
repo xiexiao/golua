@@ -44,7 +44,6 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 				structName = name
 				for _, x := range stype.Fields.List {
 					if x.Tag != nil && len(x.Names) > 0 && strings.HasPrefix(x.Tag.Value, "`lua") {
-						//TODO:switch
 						fname := x.Names[0].Name
 						cname := fname
 						name1 := ParseTag(x.Tag.Value)
@@ -82,64 +81,73 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 	}
 	code.StructName = structName
 
-	var funcNew *CodeFunc
 	var funcs []CodeFunc
+	var typeFuncs []CodeFunc
 	for _, d := range f.Decls {
 		fd, ok := d.(*ast.FuncDecl)
-		makeUdata := false
-		udataToBytes := false
 		if ok {
 			funcName := fd.Name.Name
 			name := funcName
+			luaFunc := false //export to lua
+			makeUdata := false
+			udataToBytes := false
+			prefix := ""
 			if fd.Doc != nil {
-				funcName1, makeUdata1, udataToBytes1 := ParseDoc(fd.Doc)
-				if funcName1 != "" {
-					name = funcName1
-				}
-				if makeUdata1 {
-					makeUdata = makeUdata1
-				}
-				if udataToBytes1 {
-					udataToBytes = udataToBytes1
-				}
-			}
-			paramIdx := 1
-			if fd.Recv != nil {
-				paramIdx = 2
-			}
-			paramList, resultList, params,
-				results, structID := ParseFunc(fd, paramIdx, makeUdata, udataToBytes)
-			if fd.Recv != nil {
-				rtype := fd.Recv.List[0].Type
-				if rt1, ok := rtype.(*ast.StarExpr); ok {
-					tname := rt1.X.(*ast.Ident).Name // Type Name
-					if tname == structName {         // Recv Must be Current Type
-						cf := CodeFunc{
-							Name:       name,
-							FuncName:   funcName,
-							StructID:   structID,
-							StructName: structName,
-							ParamList:  paramList,
-							ResultList: resultList,
-							Params:     params,
-							Results:    results,
-						}
-						funcs = append(funcs, cf)
+				var name1 string
+				luaFunc, name1, prefix, makeUdata, udataToBytes = ParseDoc(fd.Doc)
+				if luaFunc {
+					if name1 == "" {
+						name = funcName
+					} else {
+						name = name1
+						prefix = ""
 					}
 				}
-			} else {
-				if funcName == structName+"New" {
-					funcNew = &CodeFunc{
-						StructName: structName,
+			}
+			if luaFunc {
+				paramIdx := 1
+				if fd.Recv != nil {
+					paramIdx = 2
+				}
+				paramList, resultList, params,
+					results, structID := ParseFunc(fd, paramIdx, makeUdata, udataToBytes)
+				if fd.Recv != nil {
+					rtype := fd.Recv.List[0].Type
+					if rt1, ok := rtype.(*ast.StarExpr); ok {
+						tname := rt1.X.(*ast.Ident).Name // Type Name
+						if tname == structName {         // Recv Must be Current Type
+							cf := CodeFunc{
+								StructID:   structID,
+								StructName: structName,
+
+								Name:       name,
+								FuncName:   funcName,
+								FuncPrefix: prefix,
+								ParamList:  paramList,
+								ResultList: resultList,
+								Params:     params,
+								Results:    results,
+							}
+							typeFuncs = append(typeFuncs, cf)
+						}
+					}
+				} else {
+					f := CodeFunc{
+						Name:       name,
+						FuncName:   funcName,
+						FuncPrefix: prefix,
 						ParamList:  paramList,
 						ResultList: resultList,
 						Params:     params,
 						Results:    results,
 					}
-					code.FuncNew = funcNew
+					funcs = append(funcs, f)
 				}
 			}
 		}
+	}
+	if len(typeFuncs) > 0 {
+		code.TypeFuncs = typeFuncs
 	}
 	if len(funcs) > 0 {
 		code.Funcs = funcs
@@ -153,6 +161,7 @@ func codeExec(t *template.Template, data interface{}, formatCode bool) ([]byte, 
 		return nil, err
 	}
 	if formatCode {
+		fmt.Println(string(buf.Bytes()))
 		return format.Source(buf.Bytes())
 	}
 	return buf.Bytes(), nil

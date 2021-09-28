@@ -18,10 +18,12 @@ var funcTemplate = template.Must(template.New("func").
 	Funcs(template.FuncMap{"join": join}).
 	Parse(tplFunc))
 
+/*
 //go:embed tpl_func_new.txt
 var tplFuncNew string
 var funcNewTemplate = template.Must(funcTemplate.New("func_new").
 	Parse(tplFuncNew))
+*/
 
 //go:embed tpl_func_field.txt
 var tplFuncField string
@@ -43,7 +45,7 @@ type Code struct {
 
 	Fields []CodeField
 
-	FuncNew *CodeFunc
+	TypeFuncs []CodeFunc
 
 	Funcs []CodeFunc
 }
@@ -54,10 +56,12 @@ type PkgImport struct {
 }
 
 type CodeFunc struct {
-	Name       string
 	StructID   string
 	StructName string
+
+	Name       string
 	FuncName   string
+	FuncPrefix string
 
 	ResultList []string
 	ParamList  []string

@@ -4,44 +4,56 @@
 
 package {{.PkgName}}
 
+{{- if or .StructName .Funcs }}
 import (
 {{- if .Imports}}
-{{- range .Imports}}
-	"{{.Import}}"
-{{- end }}
+    {{- range .Imports}}
+	    "{{.Import}}"
+    {{- end }}
 {{ end }}
 	"github.com/xiexiao/golua/lua"
 )
-
-const luaMT_{{.StructName}} = "_{{.PkgName}}.luaMT_{{.StructName}}"
-
-func Lua{{.StructName}}Init(L *lua.State) int {
-	L.InitMetaTable(luaMT_{{.StructName}}, lua_{{.StructName}}Funcs)
-	return 0
-}
-{{ if .FuncNew }}
-{{ template "func_new" .FuncNew }}
 {{ end }}
-{{- if .Funcs}}
-{{- range .Funcs}}
-{{ template "func" .}}
-{{- end}}
-{{- end}}
-{{- if .Fields}}
-{{- range .Fields}}
-{{ template "func_field" .}}
-{{- end}}
-{{- end}}
-var lua_{{.StructName}}Funcs = map[string]lua.LuaGoFunction{
-{{- if .Fields}}
-{{- range .Fields }}
-	"_{{.Name}}": lua_{{.StructName}}{{.FieldName}},
+
+{{- if .StructName}}
+    const luaMT_{{.StructName}} = "_{{.PkgName}}.luaMT_{{.StructName}}"
+
+    func Lua{{.StructName}}Init(L *lua.State) int {
+	    L.InitMetaTable(luaMT_{{.StructName}}, lua_{{.StructName}}Funcs)
+	    return 0
+    }
 {{- end }}
 
+{{- if .Funcs }}
+    {{- range .Funcs}}
+        {{ template "func" .}}
+    {{- end}}
 {{- end }}
-{{- if .Funcs}}
-{{- range .Funcs }}
-	"{{.Name}}": lua{{.StructName}}{{.FuncName}},
+
+{{- if .TypeFuncs}}
+    {{- range .TypeFuncs}}
+        {{ template "func" .}}
+    {{- end}}
+{{- end}}
+
+{{- if .Fields}}
+    {{- range .Fields}}
+        {{ template "func_field" .}}
+    {{- end}}
+{{- end}}
+
+{{- if .StructName}}
+    var lua_{{.StructName}}Funcs = map[string]lua.LuaGoFunction {
+    {{- if .Fields}}
+        {{- range .Fields }}
+	        "_{{.Name}}": lua_{{.StructName}}{{.FieldName}},
+        {{- end }}
+    {{- end }}
+
+    {{- if .TypeFuncs}}
+        {{- range .TypeFuncs }}
+	        "{{.Name}}": {{.FuncPrefix}}{{.StructName}}{{.FuncName}},
+        {{- end }}
+    {{- end }}
+    }
 {{- end }}
-{{- end }}
-}
