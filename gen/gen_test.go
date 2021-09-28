@@ -71,10 +71,12 @@ type Code struct {
     Name string ` + "`lua:name`" + `
 }
 
+//lua:new
 func CodeNew(s byte, s2 string)(*Code, error) {
     return nil, nil
 }
 
+//lua:
 func (c *Code) Check() {
 }
     `

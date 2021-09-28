@@ -100,7 +100,6 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 						name = funcName
 					} else {
 						name = name1
-						prefix = ""
 					}
 				}
 			}
@@ -161,7 +160,7 @@ func codeExec(t *template.Template, data interface{}, formatCode bool) ([]byte, 
 		return nil, err
 	}
 	if formatCode {
-		fmt.Println(string(buf.Bytes()))
+		//fmt.Println(string(buf.Bytes()))
 		return format.Source(buf.Bytes())
 	}
 	return buf.Bytes(), nil
