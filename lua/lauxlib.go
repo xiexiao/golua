@@ -115,6 +115,13 @@ func (L *State) DoString(str string) error {
 	return L.Call(0, LUA_MULTRET)
 }
 
+func (L *State) DoWithFileName(buf []byte, name string) error {
+	if r := L.Load(buf, name); r != 0 {
+		return &LuaError{r, L.ToString(-1), L.StackTrace()}
+	}
+	return L.Call(0, LUA_MULTRET)
+}
+
 // Like DoString but panics on error
 func (L *State) MustDoString(str string) {
 	if err := L.DoString(str); err != nil {
