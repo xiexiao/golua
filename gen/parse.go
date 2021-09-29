@@ -26,10 +26,35 @@ func AddImports(names []string, imports []PkgImport, name string) {
 }
 */
 
+func ParseTypeDoc(cg *ast.CommentGroup) (name, prefix string, ok bool) {
+	ok = false
+	if cg != nil && len(cg.List) > 0 {
+		text := cg.List[0].Text
+		//fmt.Println(text)
+		ltext := strings.ToLower(text)
+		got := false
+		idx := 8
+		if strings.HasPrefix(ltext, "//luamt:") {
+			got = true
+		}
+		if got {
+			ok = true
+			str := text[idx:]
+			list := strings.Split(str, ",")
+			prefix = text[2:7]
+			if len(list) > 0 && list[0] != "" {
+				name = list[0]
+			}
+		}
+	}
+	return
+
+}
+
 const makeUdataTag = "__make_udata"        //返回用户定义类型，绑定到特定的metatable上的
 const udataToBytesTag = "__udata_to_bytes" //支持lua的用户类型（ud+size）返回到[]byte的golang类型上
 
-func ParseDoc(cg *ast.CommentGroup) (ok bool, name, prefix string, makeUdata, udataToBytes bool) {
+func ParseDoc(cg *ast.CommentGroup) (name, prefix string, makeUdata, udataToBytes, ok bool) {
 	ok = false
 	if cg != nil && len(cg.List) > 0 {
 		text := cg.List[0].Text
@@ -39,7 +64,7 @@ func ParseDoc(cg *ast.CommentGroup) (ok bool, name, prefix string, makeUdata, ud
 		idx := 6
 		if strings.HasPrefix(ltext, "//lua:") {
 			got = true
-		} else if strings.HasPrefix(ltext, "//_lua:") {
+		} else if strings.HasPrefix(ltext, "//_lua:") { //不使用前缀
 			got = true
 			idx = 7
 			noPrefix = true
@@ -113,7 +138,7 @@ func GenGetCode(vtype, vname string, idx int, udataToBytes bool) string {
 	return code
 }
 
-func GenPushCode(vtype, vname string, idx int, makeUdata bool) string {
+func GenPushCode(sprefix, structID, vtype, vname string, idx int, makeUdata bool) string {
 	format := ""
 	code := ""
 	switch vtype {
@@ -145,7 +170,7 @@ func GenPushCode(vtype, vname string, idx int, makeUdata bool) string {
 		format = "L.LPushError(%s)"
 	default:
 		if makeUdata {
-			return fmt.Sprintf("L.NewUdataWithField(%s, luaMT_%s)", vname, vtype)
+			return fmt.Sprintf("L.NewUdataWithField(%s, %s%s_Name)", vname, sprefix, structID)
 		}
 		format = "L.LPushToTable(%s)"
 		break
@@ -156,7 +181,8 @@ func GenPushCode(vtype, vname string, idx int, makeUdata bool) string {
 	return code
 }
 
-func ParseFunc(fd *ast.FuncDecl, idx int, makeUdata bool, udataToBytes bool) ([]string, []string,
+func ParseFunc(sprefix, structID string,
+    fd *ast.FuncDecl, idx int, makeUdata bool, udataToBytes bool) ([]string, []string,
 	[]CodeItem, []CodeItem, string) {
 	var paramList []string
 	var resultList []string
@@ -220,7 +246,7 @@ func ParseFunc(fd *ast.FuncDecl, idx int, makeUdata bool, udataToBytes bool) ([]
 		start = fmt.Sprintf("v%d", j)
 		j = j + 1
 	}
-	structID := start
+	startID := start
 
 	ri := 0
 	if ftype.Results != nil {
@@ -252,9 +278,10 @@ func ParseFunc(fd *ast.FuncDecl, idx int, makeUdata bool, udataToBytes bool) ([]
 				break
 			}
 			if rtype != "" {
+                //rtype = structID
 				rname := fmt.Sprintf("%s%d", start, ri)
 				resultList = append(resultList, rname)
-				rcode := GenPushCode(rtype, rname, ri, makeUdata)
+				rcode := GenPushCode(sprefix, structID, rtype, rname, ri, makeUdata)
 				if rcode != "" {
 					results = append(results, CodeItem{
 						Name: rname,
@@ -266,7 +293,7 @@ func ParseFunc(fd *ast.FuncDecl, idx int, makeUdata bool, udataToBytes bool) ([]
 		}
 	}
 
-	return paramList, resultList, params, results, structID
+	return paramList, resultList, params, results, startID
 }
 
 /*

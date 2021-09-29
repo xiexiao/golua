@@ -28,51 +28,67 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	//ast.Print(fset, f)
 	code := &Code{}
 	code.CodeHeader = CodeHeader
 	code.FileName = filename
 	code.PkgName = f.Name.Name
 	code.ModuleName = strings.ToLower(code.PkgName)
 	structName := ""
+	structPrefix := ""
+	structID := ""
 	var fields []CodeField
 
-	for name, obj := range f.Scope.Objects {
-		spec, ok := obj.Decl.(*ast.TypeSpec)
+	var stype *ast.StructType
+	for _, decl := range f.Decls {
+		dec, ok := decl.(*ast.GenDecl)
 		if ok {
-			stype, ok := spec.Type.(*ast.StructType)
-			if ok {
-				structName = name
-				for _, x := range stype.Fields.List {
-					if x.Tag != nil && len(x.Names) > 0 && strings.HasPrefix(x.Tag.Value, "`lua") {
-						fname := x.Names[0].Name
-						cname := fname
-						name1 := ParseTag(x.Tag.Value)
+			name1, prefix, ok := ParseTypeDoc(dec.Doc)
+			if ok && len(dec.Specs) > 0 {
+				spec, ok := dec.Specs[0].(*ast.TypeSpec)
+				if ok {
+					stype, ok = spec.Type.(*ast.StructType)
+					if ok {
+						structName = spec.Name.Name
+                        structID = structName
 						if name1 != "" {
-							cname = name1
+							structID = name1
 						}
-						vname := fmt.Sprintf("v0.%s", fname)
-						ftype := ""
-						switch tt := x.Type.(type) {
-						case *ast.Ident:
-							ftype = tt.Name
-						default:
-							fmt.Printf("%T,%+v\n", x.Type, x.Type)
-						}
-						if ftype != "" {
-							fcode := GenPushCode(ftype, vname, 0, false)
-							if fcode != "" {
-								fields = append(fields, CodeField{
-									StructName: structName,
-									FieldName:  fname,
-									Name:       cname,
-									Code:       fcode,
-								})
-							}
+						structPrefix = prefix
+					}
+				}
+			}
+		}
+		if stype != nil {
+			for _, x := range stype.Fields.List {
+				if x.Tag != nil && len(x.Names) > 0 && strings.HasPrefix(x.Tag.Value, "`lua") {
+					fname := x.Names[0].Name
+					cname := fname
+					name1 := ParseTag(x.Tag.Value)
+					if name1 != "" {
+						cname = name1
+					}
+					vname := fmt.Sprintf("v0.%s", fname)
+					ftype := ""
+					switch tt := x.Type.(type) {
+					case *ast.Ident:
+						ftype = tt.Name
+					default:
+						fmt.Printf("%T,%+v\n", x.Type, x.Type)
+					}
+					if ftype != "" {
+						fcode := GenPushCode(structPrefix, structID, ftype, vname, 0, false)
+						if fcode != "" {
+							fields = append(fields, CodeField{
+								FieldName:    fname,
+								Name:         cname,
+								Code:         fcode,
+							})
 						}
 					}
 				}
-				break
 			}
+			break
 		}
 	}
 
@@ -80,6 +96,8 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 		code.Fields = fields
 	}
 	code.StructName = structName
+	code.StructID = structID
+	code.StructPrefix = structPrefix
 
 	var funcs []CodeFunc
 	var typeFuncs []CodeFunc
@@ -94,7 +112,7 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 			prefix := ""
 			if fd.Doc != nil {
 				var name1 string
-				luaFunc, name1, prefix, makeUdata, udataToBytes = ParseDoc(fd.Doc)
+				name1, prefix, makeUdata, udataToBytes, luaFunc = ParseDoc(fd.Doc)
 				if luaFunc {
 					if name1 == "" {
 						name = funcName
@@ -109,37 +127,30 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 					paramIdx = 2
 				}
 				paramList, resultList, params,
-					results, structID := ParseFunc(fd, paramIdx, makeUdata, udataToBytes)
+					results, startID := ParseFunc(structPrefix, structID, fd,
+                        paramIdx, makeUdata, udataToBytes)
+				f := CodeFunc{
+					//StructPrefix: structPrefix,
+					//StructName: structName,
+					//StructID:   structID,
+					Name:       name,
+					FuncName:   funcName,
+					FuncPrefix: prefix,
+					ParamList:  paramList,
+					ResultList: resultList,
+					Params:     params,
+					Results:    results,
+				}
 				if fd.Recv != nil {
 					rtype := fd.Recv.List[0].Type
 					if rt1, ok := rtype.(*ast.StarExpr); ok {
 						tname := rt1.X.(*ast.Ident).Name // Type Name
 						if tname == structName {         // Recv Must be Current Type
-							cf := CodeFunc{
-								StructID:   structID,
-								StructName: structName,
-
-								Name:       name,
-								FuncName:   funcName,
-								FuncPrefix: prefix,
-								ParamList:  paramList,
-								ResultList: resultList,
-								Params:     params,
-								Results:    results,
-							}
-							typeFuncs = append(typeFuncs, cf)
+					            f.StartID =    startID
+							typeFuncs = append(typeFuncs, f)
 						}
 					}
 				} else {
-					f := CodeFunc{
-						Name:       name,
-						FuncName:   funcName,
-						FuncPrefix: prefix,
-						ParamList:  paramList,
-						ResultList: resultList,
-						Params:     params,
-						Results:    results,
-					}
 					funcs = append(funcs, f)
 				}
 			}

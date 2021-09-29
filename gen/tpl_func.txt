@@ -1,6 +1,8 @@
-func {{.FuncPrefix}}{{.StructName}}{{.FuncName}}(L *lua.State) int {
-    {{- if .StructID}}
-	    {{.StructID}} := L.GetUdata(1, luaMT_{{.StructName}}).(*{{.StructName}})
+{{$P := .T0}}
+{{with .T1}}
+func {{.FuncPrefix}}{{$P.StructID}}{{.FuncName}}(L *lua.State) int {
+    {{- if .StartID}}
+	    {{.StartID}} := L.GetUdata(1, {{$P.StructPrefix}}{{$P.StructID}}).(*{{$P.StructName}})
     {{- end }}
     {{- if .Params }}
         {{- range .Params }}
@@ -8,9 +10,9 @@ func {{.FuncPrefix}}{{.StructName}}{{.FuncName}}(L *lua.State) int {
         {{- end }}
     {{- end }}
     {{- if .ResultList }}
-	    {{.ResultList | join }} := {{if .StructID}}{{.StructID}}.{{end}}{{.FuncName}}({{.ParamList | join}})
+	    {{.ResultList | join }} := {{if .StartID}}{{.StartID}}.{{end}}{{.FuncName}}({{.ParamList | join}})
     {{- else }}
-	    {{if .StructID}}{{.StructID}}.{{end}}{{.FuncName}}({{.ParamList | join}})
+	    {{if .StartID}}{{.StartID}}.{{end}}{{.FuncName}}({{.ParamList | join}})
     {{- end }}
     {{- if .Results }}
         {{- range .Results }}
@@ -19,3 +21,4 @@ func {{.FuncPrefix}}{{.StructName}}{{.FuncName}}(L *lua.State) int {
     {{- end }}
 	return {{.ResultList | len}}
 }
+{{end}}

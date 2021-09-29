@@ -1,5 +1,8 @@
-func lua_{{.StructName}}{{.FieldName}}(L *lua.State) int {
-    v0 := L.GetUdata(1, luaMT_{{.StructName}}).(*{{.StructName}})
+{{$P := .T0}}
+{{with .T1}}
+func {{$P.StructPrefix}}{{$P.StructID}}{{.FieldName}}(L *lua.State) int {
+    v0 := L.GetUdata(1, {{$P.StructPrefix}}{{$P.StructID}}).(*{{$P.StructName}})
     {{.Code}}
     return 1
 }
+{{end}}

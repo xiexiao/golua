@@ -4,7 +4,7 @@
 
 package {{.PkgName}}
 
-{{- if or .StructName .Funcs }}
+{{- if or .StructID .Funcs }}
 import (
 {{- if .Imports}}
     {{- range .Imports}}
@@ -15,44 +15,45 @@ import (
 )
 {{ end }}
 
-{{- if .StructName}}
-    const luaMT_{{.StructName}} = "_{{.PkgName}}.luaMT_{{.StructName}}"
+{{- if .StructID}}
+    const {{.StructPrefix}}{{.StructID}}_Name = "{{.PkgName}}.{{.StructPrefix}}{{.StructID}}"
 
-    func Lua{{.StructName}}Init(L *lua.State) int {
-	    L.InitMetaTable(luaMT_{{.StructName}}, lua_{{.StructName}}Funcs)
-	    return 0
+    func {{.StructPrefix}}{{.StructID}}(L *lua.State) string {
+	    L.InitMetaTable({{.StructPrefix}}{{.StructID}}_Name, {{.StructPrefix}}{{.StructID}}_Funcs)
+	    return {{.StructPrefix}}{{.StructID}}_Name 
     }
 {{- end }}
 
+{{ $T0 := . }}
 {{- if .Funcs }}
-    {{- range .Funcs}}
-        {{ template "func" .}}
+    {{- range $T1 := .Funcs}}
+        {{ template "func" wrap $T0 $T1}}
     {{- end}}
 {{- end }}
 
 {{- if .TypeFuncs}}
-    {{- range .TypeFuncs}}
-        {{ template "func" .}}
+    {{- range $T1 := .TypeFuncs}}
+        {{ template "func" wrap $T0 $T1}}
     {{- end}}
 {{- end}}
 
 {{- if .Fields}}
-    {{- range .Fields}}
-        {{ template "func_field" .}}
+    {{- range $T1 := .Fields}}
+        {{ template "func_field" wrap $T0 $T1}}
     {{- end}}
 {{- end}}
 
-{{- if .StructName}}
-    var lua_{{.StructName}}Funcs = map[string]lua.LuaGoFunction {
+{{- if .StructID}}
+    var {{.StructPrefix}}{{.StructID}}_Funcs = map[string]lua.LuaGoFunction {
     {{- if .Fields}}
         {{- range .Fields }}
-	        "_{{.Name}}": lua_{{.StructName}}{{.FieldName}},
+	        "_{{.Name}}": {{$T0.StructPrefix}}{{$T0.StructID}}{{.FieldName}},
         {{- end }}
     {{- end }}
 
     {{- if .TypeFuncs}}
         {{- range .TypeFuncs }}
-	        "{{.Name}}": {{.FuncPrefix}}{{.StructName}}{{.FuncName}},
+	        "{{.Name}}": {{.FuncPrefix}}{{$T0.StructID}}{{.FuncName}},
         {{- end }}
     {{- end }}
     }
