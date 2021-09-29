@@ -50,7 +50,7 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 					stype, ok = spec.Type.(*ast.StructType)
 					if ok {
 						structName = spec.Name.Name
-                        structID = structName
+						structID = structName
 						if name1 != "" {
 							structID = name1
 						}
@@ -80,9 +80,9 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 						fcode := GenPushCode(structPrefix, structID, ftype, vname, 0, false)
 						if fcode != "" {
 							fields = append(fields, CodeField{
-								FieldName:    fname,
-								Name:         cname,
-								Code:         fcode,
+								FieldName: fname,
+								Name:      cname,
+								Code:      fcode,
 							})
 						}
 					}
@@ -105,7 +105,7 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 		fd, ok := d.(*ast.FuncDecl)
 		if ok {
 			funcName := fd.Name.Name
-			name := funcName
+			funcID := funcName
 			luaFunc := false //export to lua
 			makeUdata := false
 			udataToBytes := false
@@ -114,10 +114,8 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 				var name1 string
 				name1, prefix, makeUdata, udataToBytes, luaFunc = ParseDoc(fd.Doc)
 				if luaFunc {
-					if name1 == "" {
-						name = funcName
-					} else {
-						name = name1
+					if name1 != "" {
+						funcID = name1
 					}
 				}
 			}
@@ -128,12 +126,12 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 				}
 				paramList, resultList, params,
 					results, startID := ParseFunc(structPrefix, structID, fd,
-                        paramIdx, makeUdata, udataToBytes)
+					paramIdx, makeUdata, udataToBytes)
 				f := CodeFunc{
 					//StructPrefix: structPrefix,
 					//StructName: structName,
 					//StructID:   structID,
-					Name:       name,
+					FuncID:     funcID,
 					FuncName:   funcName,
 					FuncPrefix: prefix,
 					ParamList:  paramList,
@@ -146,7 +144,7 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 					if rt1, ok := rtype.(*ast.StarExpr); ok {
 						tname := rt1.X.(*ast.Ident).Name // Type Name
 						if tname == structName {         // Recv Must be Current Type
-					            f.StartID =    startID
+							f.StartID = startID
 							typeFuncs = append(typeFuncs, f)
 						}
 					}

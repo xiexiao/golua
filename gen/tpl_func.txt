@@ -1,6 +1,6 @@
 {{$P := .T0}}
 {{with .T1}}
-func {{.FuncPrefix}}{{$P.StructID}}{{.FuncName}}(L *lua.State) int {
+func {{.FuncPrefix}}{{$P.StructID}}{{.FuncID}}(L *lua.State) int {
     {{- if .StartID}}
 	    {{.StartID}} := L.GetUdata(1, {{$P.StructPrefix}}{{$P.StructID}}_Name).(*{{$P.StructName}})
     {{- end }}

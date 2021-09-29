@@ -1,8 +1,8 @@
 package gen
 
 import (
-    "fmt"
 	_ "embed"
+	"fmt"
 	"strings"
 	"text/template"
 )
@@ -13,12 +13,12 @@ func join(s []string) string {
 	return strings.Join(s, ", ")
 }
 
-func wrap(its ...interface{}) map[string]interface{}{
-    m := make(map[string]interface{})
-    for i, it := range its {
-        m[fmt.Sprintf("T%d",i)] = it
-    }
-    return m
+func wrap(its ...interface{}) map[string]interface{} {
+	m := make(map[string]interface{})
+	for i, it := range its {
+		m[fmt.Sprintf("T%d", i)] = it
+	}
+	return m
 }
 
 //go:embed tpl_func.txt
@@ -49,7 +49,7 @@ type Code struct {
 	FileName     string
 	CodeHeader   string
 	PkgName      string
-	StructID string //use id in code
+	StructID     string //use id in code
 	StructName   string
 	StructPrefix string
 	ModuleName   string
@@ -68,10 +68,10 @@ type PkgImport struct {
 }
 
 type CodeFunc struct {
-    IsType bool
-	StartID    string
+	IsType  bool
+	StartID string
 
-	Name       string
+	FuncID     string
 	FuncName   string
 	FuncPrefix string
 
@@ -88,7 +88,7 @@ type CodeItem struct {
 }
 
 type CodeField struct {
-	FieldName    string
-	Name         string
-	Code         string
+	FieldName string
+	Name      string
+	Code      string
 }
