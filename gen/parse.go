@@ -182,7 +182,7 @@ func GenPushCode(sprefix, structID, vtype, vname string, idx int, makeUdata bool
 }
 
 func ParseFunc(sprefix, structID string,
-    fd *ast.FuncDecl, idx int, makeUdata bool, udataToBytes bool) ([]string, []string,
+	fd *ast.FuncDecl, idx int, makeUdata bool, udataToBytes bool) ([]string, []string,
 	[]CodeItem, []CodeItem, string) {
 	var paramList []string
 	var resultList []string
@@ -278,7 +278,7 @@ func ParseFunc(sprefix, structID string,
 				break
 			}
 			if rtype != "" {
-                //rtype = structID
+				//rtype = structID
 				rname := fmt.Sprintf("%s%d", start, ri)
 				resultList = append(resultList, rname)
 				rcode := GenPushCode(sprefix, structID, rtype, rname, ri, makeUdata)

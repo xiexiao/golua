@@ -53,7 +53,7 @@ import (
 
     {{- if .TypeFuncs}}
         {{- range .TypeFuncs }}
-	        "{{.Name}}": {{.FuncPrefix}}{{$T0.StructID}}{{.FuncID}},
+	        "{{.FuncID}}": {{.FuncPrefix}}{{$T0.StructID}}{{.FuncID}},
         {{- end }}
     {{- end }}
     }
