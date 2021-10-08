@@ -77,7 +77,7 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 						fmt.Printf("%T,%+v\n", x.Type, x.Type)
 					}
 					if ftype != "" {
-						fcode := GenPushCode(structPrefix, structID, ftype, vname, 0, false)
+						fcode := GenPushCode(structPrefix, structID, ftype, vname, 0, false, "", false)
 						if fcode != "" {
 							fields = append(fields, CodeField{
 								FieldName: fname,

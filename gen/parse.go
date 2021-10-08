@@ -138,7 +138,8 @@ func GenGetCode(vtype, vname string, idx int, udataToBytes bool) string {
 	return code
 }
 
-func GenPushCode(sprefix, structID, vtype, vname string, idx int, makeUdata bool) string {
+func GenPushCode(sprefix, structID, vtype, vname string, idx int,
+	isSlice bool, sliceType string, makeUdata bool) string {
 	format := ""
 	code := ""
 	switch vtype {
@@ -172,7 +173,17 @@ func GenPushCode(sprefix, structID, vtype, vname string, idx int, makeUdata bool
 		if makeUdata {
 			return fmt.Sprintf("L.NewUdataWithField(%s, %s%s_Name)", vname, sprefix, structID)
 		}
-		format = "L.LPushToTable(%s)"
+		fmt.Println("vtype->", vtype, isSlice)
+		if isSlice {
+			s1 := GenPushCode("", "", sliceType, "v", 0, false, "", false)
+			format = `L.NewTable()
+	for i, v := range %s {
+	    ` + s1 + `	
+		L.RawSeti(-2, i+1)
+	}`
+		} else {
+			format = "L.LPushToTable(%s)"
+		}
 		break
 	}
 	if format != "" {
@@ -252,6 +263,8 @@ func ParseFunc(sprefix, structID string,
 	if ftype.Results != nil {
 		for _, x := range ftype.Results.List {
 			rtype := ""
+			isSlice := false
+			sliceType := ""
 			switch tt := x.Type.(type) {
 			case *ast.Ident:
 				rtype = tt.Name
@@ -267,6 +280,8 @@ func ParseFunc(sprefix, structID string,
 			case *ast.ArrayType:
 				if id2, ok := tt.Elt.(*ast.Ident); ok {
 					rtype = "[]" + id2.Name
+					isSlice = true
+					sliceType = id2.Name
 				} else if see, ok := tt.Elt.(*ast.SelectorExpr); ok {
 					i1, ok1 := see.X.(*ast.Ident)
 					if ok1 {
@@ -281,7 +296,8 @@ func ParseFunc(sprefix, structID string,
 				//rtype = structID
 				rname := fmt.Sprintf("%s%d", start, ri)
 				resultList = append(resultList, rname)
-				rcode := GenPushCode(sprefix, structID, rtype, rname, ri, makeUdata)
+				rcode := GenPushCode(sprefix, structID, rtype, rname, ri,
+					isSlice, sliceType, makeUdata)
 				if rcode != "" {
 					results = append(results, CodeItem{
 						Name: rname,
