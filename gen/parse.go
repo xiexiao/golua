@@ -173,7 +173,6 @@ func GenPushCode(sprefix, structID, vtype, vname string, idx int,
 		if makeUdata {
 			return fmt.Sprintf("L.NewUdataWithField(%s, %s%s_Name)", vname, sprefix, structID)
 		}
-		fmt.Println("vtype->", vtype, isSlice)
 		if isSlice {
 			s1 := GenPushCode("", "", sliceType, "v", 0, false, "", false)
 			format = `L.NewTable()
