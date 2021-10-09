@@ -33,28 +33,22 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 	code.CodeHeader = CodeHeader
 	code.FileName = filename
 	code.PkgName = f.Name.Name
+	code.StructPrefix = "luaMT"
 	code.ModuleName = strings.ToLower(code.PkgName)
 	structName := ""
-	structPrefix := ""
-	structID := ""
 	var fields []CodeField
 
 	var stype *ast.StructType
 	for _, decl := range f.Decls {
 		dec, ok := decl.(*ast.GenDecl)
 		if ok {
-			name1, prefix, ok := ParseTypeDoc(dec.Doc)
-			if ok && len(dec.Specs) > 0 {
+			ok1 := ParseTypeDoc(dec.Doc)
+			if ok1 && len(dec.Specs) > 0 {
 				spec, ok := dec.Specs[0].(*ast.TypeSpec)
 				if ok {
 					stype, ok = spec.Type.(*ast.StructType)
 					if ok {
 						structName = spec.Name.Name
-						structID = structName
-						if name1 != "" {
-							structID = name1
-						}
-						structPrefix = prefix
 					}
 				}
 			}
@@ -77,7 +71,7 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 						fmt.Printf("%T,%+v\n", x.Type, x.Type)
 					}
 					if ftype != "" {
-						fcode := GenPushCode(structPrefix, structID, ftype, vname, 0, false, "", false)
+						fcode := GenPushCode(code.StructPrefix, ftype, vname, 0, false, "", false)
 						if fcode != "" {
 							fields = append(fields, CodeField{
 								FieldName: fname,
@@ -96,8 +90,6 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 		code.Fields = fields
 	}
 	code.StructName = structName
-	code.StructID = structID
-	code.StructPrefix = structPrefix
 
 	var funcs []CodeFunc
 	var typeFuncs []CodeFunc
@@ -125,12 +117,9 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 					paramIdx = 2
 				}
 				paramList, resultList, params,
-					results, startID := ParseFunc(structPrefix, structID, fd,
-					paramIdx, makeUdata, udataToBytes)
+					results, startID := ParseFunc(code.StructPrefix, fd, paramIdx, makeUdata, udataToBytes)
 				f := CodeFunc{
-					//StructPrefix: structPrefix,
 					//StructName: structName,
-					//StructID:   structID,
 					FuncID:     funcID,
 					FuncName:   funcName,
 					FuncPrefix: prefix,

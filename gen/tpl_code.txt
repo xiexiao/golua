@@ -4,7 +4,7 @@
 
 package {{.PkgName}}
 
-{{- if or .StructID .Funcs }}
+{{- if or .StructName .Funcs }}
 import (
 {{- if .Imports}}
     {{- range .Imports}}
@@ -15,12 +15,12 @@ import (
 )
 {{ end }}
 
-{{- if .StructID}}
-    const {{.StructPrefix}}{{.StructID}}_Name = "{{.PkgName}}.{{.StructPrefix}}{{.StructID}}"
+{{- if .StructName}}
+    const {{.StructPrefix}}{{.StructName}}_Name = "{{.PkgName}}.{{.StructPrefix}}{{.StructName}}"
 
-    func {{.StructPrefix}}{{.StructID}}(L *lua.State) string {
-	    L.InitMetaTable({{.StructPrefix}}{{.StructID}}_Name, {{.StructPrefix}}{{.StructID}}_Funcs)
-	    return {{.StructPrefix}}{{.StructID}}_Name 
+    func {{.StructPrefix}}{{.StructName}}(L *lua.State) string {
+	    L.InitMetaTable({{.StructPrefix}}{{.StructName}}_Name, {{.StructPrefix}}{{.StructName}}_Funcs)
+	    return {{.StructPrefix}}{{.StructName}}_Name 
     }
 {{- end }}
 
@@ -43,17 +43,17 @@ import (
     {{- end}}
 {{- end}}
 
-{{- if .StructID}}
-    var {{.StructPrefix}}{{.StructID}}_Funcs = map[string]lua.LuaGoFunction {
+{{- if .StructName}}
+    var {{.StructPrefix}}{{.StructName}}_Funcs = map[string]lua.LuaGoFunction {
     {{- if .Fields}}
         {{- range .Fields }}
-	        "_{{.Name}}": {{$T0.StructPrefix}}{{$T0.StructID}}{{.FieldName}},
+	        "_{{.Name}}": {{$T0.StructPrefix}}{{$T0.StructName}}{{.FieldName}},
         {{- end }}
     {{- end }}
 
     {{- if .TypeFuncs}}
         {{- range .TypeFuncs }}
-	        "{{.FuncID}}": {{.FuncPrefix}}{{$T0.StructID}}{{.FuncID}},
+	        "{{.FuncID}}": {{.FuncPrefix}}{{$T0.StructName}}{{.FuncID}},
         {{- end }}
     {{- end }}
     }

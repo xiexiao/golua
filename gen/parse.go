@@ -26,28 +26,15 @@ func AddImports(names []string, imports []PkgImport, name string) {
 }
 */
 
-func ParseTypeDoc(cg *ast.CommentGroup) (name, prefix string, ok bool) {
-	ok = false
+func ParseTypeDoc(cg *ast.CommentGroup) bool {
 	if cg != nil && len(cg.List) > 0 {
 		text := cg.List[0].Text
-		//fmt.Println(text)
 		ltext := strings.ToLower(text)
-		got := false
-		idx := 8
 		if strings.HasPrefix(ltext, "//luamt:") {
-			got = true
-		}
-		if got {
-			ok = true
-			str := text[idx:]
-			list := strings.Split(str, ",")
-			prefix = text[2:7]
-			if len(list) > 0 && list[0] != "" {
-				name = list[0]
-			}
+			return true
 		}
 	}
-	return
+	return false
 
 }
 
@@ -138,7 +125,7 @@ func GenGetCode(vtype, vname string, idx int, udataToBytes bool) string {
 	return code
 }
 
-func GenPushCode(sprefix, structID, vtype, vname string, idx int,
+func GenPushCode(sprefix, vtype, vname string, idx int,
 	isSlice bool, sliceType string, makeUdata bool) string {
 	format := ""
 	code := ""
@@ -171,10 +158,10 @@ func GenPushCode(sprefix, structID, vtype, vname string, idx int,
 		format = "L.LPushError(%s)"
 	default:
 		if makeUdata {
-			return fmt.Sprintf("L.NewUdataWithField(%s, %s%s_Name)", vname, sprefix, structID)
+			return fmt.Sprintf("L.NewUdataWithField(%s, %s%s_Name)", vname, sprefix, vtype)
 		}
 		if isSlice {
-			s1 := GenPushCode("", "", sliceType, "v", 0, false, "", false)
+			s1 := GenPushCode("", sliceType, "v", 0, false, "", false)
 			format = `L.NewTable()
 	for i, v := range %s {
 	    ` + s1 + `	
@@ -191,8 +178,7 @@ func GenPushCode(sprefix, structID, vtype, vname string, idx int,
 	return code
 }
 
-func ParseFunc(sprefix, structID string,
-	fd *ast.FuncDecl, idx int, makeUdata bool, udataToBytes bool) ([]string, []string,
+func ParseFunc(sprefix string, fd *ast.FuncDecl, idx int, makeUdata bool, udataToBytes bool) ([]string, []string,
 	[]CodeItem, []CodeItem, string) {
 	var paramList []string
 	var resultList []string
@@ -292,10 +278,11 @@ func ParseFunc(sprefix, structID string,
 				break
 			}
 			if rtype != "" {
-				//rtype = structID
 				rname := fmt.Sprintf("%s%d", start, ri)
 				resultList = append(resultList, rname)
-				rcode := GenPushCode(sprefix, structID, rtype, rname, ri,
+				//log.Printf("rtype->%s,rname->%s\n",
+				//rtype, rname)
+				rcode := GenPushCode(sprefix, rtype, rname, ri,
 					isSlice, sliceType, makeUdata)
 				if rcode != "" {
 					results = append(results, CodeItem{

@@ -1,7 +1,7 @@
 {{$P := .T0}}
 {{with .T1}}
-func {{$P.StructPrefix}}{{$P.StructID}}{{.FieldName}}(L *lua.State) int {
-    v0 := L.GetUdata(1, {{$P.StructPrefix}}{{$P.StructID}}_Name).(*{{$P.StructName}})
+func {{$P.StructPrefix}}{{$P.StructName}}{{.FieldName}}(L *lua.State) int {
+    v0 := L.GetUdata(1, {{$P.StructPrefix}}{{$P.StructName}}_Name).(*{{$P.StructName}})
     {{.Code}}
     return 1
 }

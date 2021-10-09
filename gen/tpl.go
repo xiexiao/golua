@@ -49,9 +49,8 @@ type Code struct {
 	FileName     string
 	CodeHeader   string
 	PkgName      string
-	StructID     string //use id in code
-	StructName   string
 	StructPrefix string
+	StructName   string
 	ModuleName   string
 	Imports      []PkgImport
 
