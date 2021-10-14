@@ -67,8 +67,10 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 					isStar := false
 					switch tt := x.Type.(type) {
 					case *ast.Ident:
-						isStar = true
 						ftype = tt.Name
+					case *ast.StarExpr:
+						ftype = tt.X.(*ast.Ident).Name
+						isStar = true
 					default:
 						fmt.Printf("%T,%+v\n", x.Type, x.Type)
 					}
