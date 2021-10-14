@@ -126,7 +126,7 @@ func GenGetCode(vtype, vname string, idx int, udataToBytes bool) string {
 }
 
 func GenPushCode(sprefix, vtype, vname string, idx int,
-	isSlice bool, sliceType string, makeUdata bool) string {
+	isStar, isSlice bool, sliceType string, makeUdata bool) string {
 	format := ""
 	code := ""
 	switch vtype {
@@ -134,6 +134,7 @@ func GenPushCode(sprefix, vtype, vname string, idx int,
 		format = "L.PushInteger(int64(%s))"
 	case "[]byte":
 		format = "L.LPushBytes(%s)"
+		//isStar = false
 	case "int":
 		format = "L.PushInteger(int64(%s))"
 	case "uint16", "int16":
@@ -161,7 +162,7 @@ func GenPushCode(sprefix, vtype, vname string, idx int,
 			return fmt.Sprintf("L.NewUdataWithField(%s, %s%s_Name)", vname, sprefix, vtype)
 		}
 		if isSlice {
-			s1 := GenPushCode("", sliceType, "v", 0, false, "", false)
+			s1 := GenPushCode("", sliceType, "v", 0, false, false, "", false)
 			format = `L.NewTable()
 	for i, v := range %s {
 	    ` + s1 + `	
@@ -170,10 +171,15 @@ func GenPushCode(sprefix, vtype, vname string, idx int,
 		} else {
 			format = "L.LPushToTable(%s)"
 		}
+		//isStar = false
 		break
 	}
 	if format != "" {
-		code = fmt.Sprintf(format, vname)
+		if isStar {
+			code = fmt.Sprintf(format, "*"+vname)
+		} else {
+			code = fmt.Sprintf(format, vname)
+		}
 	}
 	return code
 }
@@ -190,12 +196,14 @@ func ParseFunc(sprefix string, fd *ast.FuncDecl, idx int, makeUdata bool, udataT
 	codeI := idx
 	for _, x := range ftype.Params.List {
 		ptype := ""
+		isStar := false
 		switch tt := x.Type.(type) {
 		case *ast.Ident:
 			ptype = tt.Name
 		case *ast.StarExpr:
 			if t2, ok2 := tt.X.(*ast.Ident); ok2 {
 				ptype = t2.Name
+				isStar = true
 			}
 		case *ast.ArrayType:
 			if id2, ok := tt.Elt.(*ast.Ident); ok {
@@ -214,7 +222,11 @@ func ParseFunc(sprefix string, fd *ast.FuncDecl, idx int, makeUdata bool, udataT
 			for _, xn := range x.Names {
 				pname := xn.Name
 				pcode := GenGetCode(ptype, pname, codeI, udataToBytes)
-				paramList = append(paramList, pname)
+				if isStar {
+					paramList = append(paramList, "&"+pname)
+				} else {
+					paramList = append(paramList, pname)
+				}
 				if pcode != "" {
 					params = append(params, CodeItem{
 						Name: pname,
@@ -249,6 +261,7 @@ func ParseFunc(sprefix string, fd *ast.FuncDecl, idx int, makeUdata bool, udataT
 		for _, x := range ftype.Results.List {
 			rtype := ""
 			isSlice := false
+			isStar := false
 			sliceType := ""
 			switch tt := x.Type.(type) {
 			case *ast.Ident:
@@ -256,10 +269,12 @@ func ParseFunc(sprefix string, fd *ast.FuncDecl, idx int, makeUdata bool, udataT
 			case *ast.StarExpr:
 				if ide, ok := tt.X.(*ast.Ident); ok {
 					rtype = ide.Name
+					isStar = true
 				} else if see, ok := tt.X.(*ast.SelectorExpr); ok {
 					i1, ok1 := see.X.(*ast.Ident)
 					if ok1 {
 						rtype = i1.Name + "." + see.Sel.Name
+						isStar = true
 					}
 				}
 			case *ast.ArrayType:
@@ -283,7 +298,7 @@ func ParseFunc(sprefix string, fd *ast.FuncDecl, idx int, makeUdata bool, udataT
 				//log.Printf("rtype->%s,rname->%s\n",
 				//rtype, rname)
 				rcode := GenPushCode(sprefix, rtype, rname, ri,
-					isSlice, sliceType, makeUdata)
+					isStar, isSlice, sliceType, makeUdata)
 				if rcode != "" {
 					results = append(results, CodeItem{
 						Name: rname,

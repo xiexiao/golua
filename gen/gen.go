@@ -64,14 +64,17 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 					}
 					vname := fmt.Sprintf("v0.%s", fname)
 					ftype := ""
+					isStar := false
 					switch tt := x.Type.(type) {
 					case *ast.Ident:
+						isStar = true
 						ftype = tt.Name
 					default:
 						fmt.Printf("%T,%+v\n", x.Type, x.Type)
 					}
 					if ftype != "" {
-						fcode := GenPushCode(code.StructPrefix, ftype, vname, 0, false, "", false)
+						fcode := GenPushCode(code.StructPrefix, ftype, vname, 0, isStar,
+							false, "", false)
 						if fcode != "" {
 							fields = append(fields, CodeField{
 								FieldName: fname,
