@@ -74,12 +74,16 @@ func ParseDoc(cg *ast.CommentGroup) (name, prefix string, makeUdata, udataToByte
 	return
 }
 
-func GenGetCode(vtype, vname string, idx int, udataToBytes bool) string {
+func GenGetCode(vtype, vname string, idx int, isStar, udataToBytes bool) string {
 	format := ""
 	code := ""
 	switch vtype {
 	case "byte":
-		format = "%s := byte(L.CheckInteger(%d))"
+		if isStar {
+			format = "%s := L.ByteOrNil(%d)"
+		} else {
+			format = "%s := byte(L.CheckInteger(%d))"
+		}
 	case "[]byte":
 		if udataToBytes {
 			format = "%s := L.UdataToBytes(%d, %d)"
@@ -88,27 +92,71 @@ func GenGetCode(vtype, vname string, idx int, udataToBytes bool) string {
 		}
 		format = "%s := L.ToBytes(%d)"
 	case "int":
-		format = "%s := L.CheckInteger(%d)"
+		if isStar {
+			format = "%s := L.IntOrNil(%d)"
+		} else {
+			format = "%s := L.CheckInteger(%d)"
+		}
 	case "uint16":
-		format = "%s := uint16(L.CheckInteger(%d))"
+		if isStar {
+			format = "%s := L.Uint16OrNil(%d)"
+		} else {
+			format = "%s := uint16(L.CheckInteger(%d))"
+		}
 	case "int16":
-		format = "%s := int16(L.CheckInteger(%d))"
+		if isStar {
+			format = "%s := L.Int16OrNil(%d)"
+		} else {
+			format = "%s := int16(L.CheckInteger(%d))"
+		}
 	case "int32":
-		format = "%s := int32(L.CheckInteger(%d))"
+		if isStar {
+			format = "%s := L.Int32OrNil(%d)"
+		} else {
+			format = "%s := int32(L.CheckInteger(%d))"
+		}
 	case "uint32":
-		format = "%s := uint32(L.CheckInteger(%d))"
+		if isStar {
+			format = "%s := L.Uint32OrNil(%d)"
+		} else {
+			format = "%s := uint32(L.CheckInteger(%d))"
+		}
 	case "int64":
-		format = "%s := int64(L.CheckInteger(%d))"
+		if isStar {
+			format = "%s := L.Int64OrNil(%d)"
+		} else {
+			format = "%s := int64(L.CheckInteger(%d))"
+		}
 	case "uint64":
-		format = "%s := uint64(L.CheckInteger(%d))"
+		if isStar {
+			format = "%s := L.Uint64OrNil(%d)"
+		} else {
+			format = "%s := uint64(L.CheckInteger(%d))"
+		}
 	case "float32":
-		format = "%s := float32(L.CheckInteger(%d))"
+		if isStar {
+			format = "%s := L.Float32OrNil(%d)"
+		} else {
+			format = "%s := float32(L.CheckInteger(%d))"
+		}
 	case "float64":
-		format = "%s := float64(L.CheckInteger(%d))"
+		if isStar {
+			format = "%s := L.Float64OrNil(%d)"
+		} else {
+			format = "%s := float64(L.CheckInteger(%d))"
+		}
 	case "string":
-		format = "%s := L.CheckString(%d)"
+		if isStar {
+			format = "%s := L.StringOrNil(%d)"
+		} else {
+			format = "%s := L.CheckString(%d)"
+		}
 	case "bool":
-		format = "%s := L.ToBoolean(%d)"
+		if isStar {
+			format = "%s := L.BooleanOrNil(%d)"
+		} else {
+			format = "%s := L.ToBoolean(%d)"
+		}
 	default:
 		if strings.HasPrefix(vtype, "[]") {
 			format = "%s := %s; L.ToArray(%s, %d)"
@@ -221,7 +269,7 @@ func ParseFunc(sprefix string, fd *ast.FuncDecl, idx int, makeUdata bool, udataT
 		if ptype != "" {
 			for _, xn := range x.Names {
 				pname := xn.Name
-				pcode := GenGetCode(ptype, pname, codeI, udataToBytes)
+				pcode := GenGetCode(ptype, pname, codeI, isStar, udataToBytes)
 				if isStar {
 					paramList = append(paramList, "&"+pname)
 				} else {

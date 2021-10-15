@@ -71,6 +71,112 @@ func (L *State) CheckString(narg int) string {
 	return C.GoString(C.luaL_checklstring(L.s, C.int(narg), &length))
 }
 
+func (L *State) BooleanOrNil(narg int) *bool {
+	if L.IsBoolean(narg) {
+		v := L.ToBoolean(narg)
+		return &v
+	}
+	return nil
+}
+
+func (L *State) ByteOrNil(narg int) *byte {
+	if C.lua_isnumber(L.s, C.int(narg)) == 1 {
+		v := byte(C.lua_tointegerx(L.s, C.int(narg), nil))
+		return &v
+	}
+	return nil
+}
+
+func (L *State) UintOrNil(narg int) *uint {
+	if C.lua_isnumber(L.s, C.int(narg)) == 1 {
+		v := uint(C.lua_tointegerx(L.s, C.int(narg), nil))
+		return &v
+	}
+	return nil
+}
+
+func (L *State) Uint32OrNil(narg int) *uint32 {
+	if C.lua_isnumber(L.s, C.int(narg)) == 1 {
+		v := uint32(C.lua_tointegerx(L.s, C.int(narg), nil))
+		return &v
+	}
+	return nil
+}
+
+func (L *State) Uint16OrNil(narg int) *uint16 {
+	if C.lua_isnumber(L.s, C.int(narg)) == 1 {
+		v := uint16(C.lua_tointegerx(L.s, C.int(narg), nil))
+		return &v
+	}
+	return nil
+}
+
+func (L *State) Uint64OrNil(narg int) *uint64 {
+	if C.lua_isnumber(L.s, C.int(narg)) == 1 {
+		v := uint64(C.lua_tointegerx(L.s, C.int(narg), nil))
+		return &v
+	}
+	return nil
+}
+
+func (L *State) IntOrNil(narg int) *int {
+	if C.lua_isnumber(L.s, C.int(narg)) == 1 {
+		v := int(C.lua_tointegerx(L.s, C.int(narg), nil))
+		return &v
+	}
+	return nil
+}
+
+func (L *State) Int32OrNil(narg int) *int32 {
+	if C.lua_isnumber(L.s, C.int(narg)) == 1 {
+		v := int32(C.lua_tointegerx(L.s, C.int(narg), nil))
+		return &v
+	}
+	return nil
+}
+
+func (L *State) Int16OrNil(narg int) *int16 {
+	if C.lua_isnumber(L.s, C.int(narg)) == 1 {
+		v := int16(C.lua_tointegerx(L.s, C.int(narg), nil))
+		return &v
+	}
+	return nil
+}
+
+func (L *State) Int64OrNil(narg int) *int64 {
+	if C.lua_isnumber(L.s, C.int(narg)) == 1 {
+		v := int64(C.lua_tointegerx(L.s, C.int(narg), nil))
+		return &v
+	}
+	return nil
+}
+
+func (L *State) Float64OrNil(narg int) *float64 {
+	if C.lua_isnumber(L.s, C.int(narg)) == 1 {
+		v := float64(C.lua_tonumberx(L.s, C.int(narg), nil))
+		return &v
+	}
+	return nil
+}
+
+func (L *State) Float32OrNil(narg int) *float32 {
+	if C.lua_isnumber(L.s, C.int(narg)) == 1 {
+		v := float32(C.lua_tonumberx(L.s, C.int(narg), nil))
+		return &v
+	}
+	return nil
+}
+
+func (L *State) StringOrNil(narg int) *string {
+	if C.lua_isstring(L.s, C.int(narg)) == 1 {
+		var size C.size_t
+		r := C.lua_tolstring(L.s, C.int(narg), &size)
+		v := C.GoStringN(r, C.int(size))
+		return &v
+	}
+	return nil
+}
+
 // luaL_checkoption
 //
 // BUG(everyone_involved): not implemented
