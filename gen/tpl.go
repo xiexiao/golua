@@ -67,6 +67,8 @@ type PkgImport struct {
 }
 
 type CodeFunc struct {
+	StructName string
+
 	IsType  bool
 	StartID string
 

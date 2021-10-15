@@ -118,13 +118,15 @@ func GenLua(filename string, in []byte, formatCode bool) ([]byte, error) {
 			}
 			if luaFunc {
 				paramIdx := 1
+				sprefix := ""
 				if fd.Recv != nil {
 					paramIdx = 2
+					sprefix = structName // type func
 				}
 				paramList, resultList, params,
-					results, startID := ParseFunc(code.StructPrefix, fd, paramIdx, makeUdata, udataToBytes)
+					results, startID := ParseFunc(sprefix, fd, paramIdx, makeUdata, udataToBytes)
 				f := CodeFunc{
-					//StructName: structName,
+					StructName: sprefix,
 					FuncID:     funcID,
 					FuncName:   funcName,
 					FuncPrefix: prefix,
