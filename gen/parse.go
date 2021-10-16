@@ -207,7 +207,7 @@ func GenPushCode(sprefix, vtype, vname string, idx int,
 		format = "L.LPushError(%s)"
 	default:
 		if makeUdata {
-			return fmt.Sprintf("L.NewUdataWithField(%s, %s%s_Name)", vname, sprefix, vtype)
+			return fmt.Sprintf("L.NewUdataWithField(%s, luaMT%s%s_Name)", vname, "", vtype)
 		}
 		if isSlice {
 			s1 := GenPushCode("", sliceType, "v", 0, false, false, "", false)
@@ -270,11 +270,11 @@ func ParseFunc(sprefix string, fd *ast.FuncDecl, idx int, makeUdata bool, udataT
 			for _, xn := range x.Names {
 				pname := xn.Name
 				pcode := GenGetCode(ptype, pname, codeI, isStar, udataToBytes)
-				if isStar {
-					paramList = append(paramList, "&"+pname)
-				} else {
-					paramList = append(paramList, pname)
-				}
+				//if isStar {
+				//paramList = append(paramList, "&"+pname)
+				//} else {
+				paramList = append(paramList, pname)
+				//}
 				if pcode != "" {
 					params = append(params, CodeItem{
 						Name: pname,
