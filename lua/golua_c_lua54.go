@@ -346,6 +346,17 @@ func (L *State) LPushToTable(ptr interface{}) int {
 	return 1
 }
 
+// LPushToTableOrNil LPushToTableOrNil
+func (L *State) LPushToTableOrNil(ptr interface{}) int {
+	val := reflect.ValueOf(ptr)
+	if val.IsNil() {
+		L.PushNil()
+	} else {
+		pushV(L, val)
+	}
+	return 1
+}
+
 func pushV(L *State, val reflect.Value) bool {
 	switch val.Kind() {
 	case reflect.Ptr:

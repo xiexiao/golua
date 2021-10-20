@@ -217,9 +217,9 @@ func GenPushCode(sprefix, vtype, vname string, idx int,
 		L.RawSeti(-2, i+1)
 	}`
 		} else {
-			format = "L.LPushToTable(%s)"
+			format = "L.LPushToTableOrNil(%s)"
 		}
-		//isStar = false
+		isStar = false
 		break
 	}
 	if format != "" {
