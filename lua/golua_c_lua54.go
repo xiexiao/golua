@@ -366,9 +366,9 @@ func pushV(L *State, val reflect.Value) bool {
 		return pushV(L, val.Elem())
 	case reflect.String:
 		L.PushString(val.String())
-	case reflect.Int, reflect.Int64:
+	case reflect.Int, reflect.Int64, reflect.Int16:
 		L.PushInteger(val.Int())
-	case reflect.Uint32, reflect.Uint64:
+	case reflect.Uint32, reflect.Uint64, reflect.Uint16:
 		L.PushInteger(int64(val.Uint()))
 	case reflect.Float32, reflect.Float64:
 		L.PushNumber(val.Float())
