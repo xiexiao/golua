@@ -276,8 +276,10 @@ func LSeriFree(ud unsafe.Pointer) {
 func (L *State) SetGoFuncs(n int,
 	funcs map[string]LuaGoFunction) {
 	for k, v := range funcs {
-		L.PushGoFunction(v)
-		L.SetField(n, k)
+		if k != "__gc" {
+			L.PushGoFunction(v)
+			L.SetField(n, k)
+		}
 	}
 }
 
@@ -288,18 +290,27 @@ func luaGC(L *State) int {
 }
 
 // SetGC SetGC
-func (L *State) SetGC(n int, tname string) int {
+func (L *State) SetGC(n int, tname string,
+	userGC LuaGoFunction) int {
 	L.LoadString(`
-local f, tname = ...
+local f, gcF, tname = ...
 if f and type(f) == 'userdata' and type(tname) == "string" then
     return function(...)
         local t = ... 
+		if gcF then
+			gcF(t)
+		end
         f(t, tname)
     end
 end 
 return nil
 	`)
 	L.PushGoFunction(luaGC)
+	if userGC != nil {
+		L.PushGoFunction(userGC)
+	} else {
+		L.PushNil()
+	}
 	L.PushString(tname)
 	err := L.Call(2, 1)
 	if err != nil {

@@ -312,8 +312,17 @@ func (L *State) InitMetaTable(tname string, funcs map[string]LuaGoFunction) bool
 	L.PushValue(-1)
 	L.SetField(-2, "__index")
 
-	L.SetGoFuncs(-2, funcs)
-	L.SetGC(-2, tname)
+	//L.SetGoFuncs(-2, funcs)
+	var gc LuaGoFunction
+	for k, v := range funcs {
+		if k != "__gc" {
+			L.PushGoFunction(v)
+			L.SetField(-2, k)
+		} else {
+			gc = v
+		}
+	}
+	L.SetGC(-2, tname, gc)
 
 	L.Pop(1)
 	return true
