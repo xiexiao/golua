@@ -312,7 +312,7 @@ return nil
 		L.PushNil()
 	}
 	L.PushString(tname)
-	err := L.Call(2, 1)
+	err := L.Call(3, 1)
 	if err != nil {
 		L.RaiseError(err.Error())
 	}
